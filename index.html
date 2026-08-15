@@ -205,13 +205,11 @@
       <details class="aicfg" id="fbcfg">
         <summary id="fbsum">Подключить руки Фейбла</summary>
         <div class="aibody">
-          <p>Тогда Джарвис сможет передавать задания Клоду Фейблу на вашем маке: скажите «поменяй цену помпы на сайте» — и Фейбл выполнит, а Джарвис озвучит отчёт. Настройка один раз:</p>
+          <p>Тогда Джарвис сможет передавать задания Клоду Фейблу на вашем маке: скажите «поменяй цену помпы на сайте» — и Фейбл выполнит, а Джарвис озвучит отчёт. Заодно список задач станет общим для всех устройств. Подключение — 3 шага:</p>
           <ol>
-            <li>Откройте <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">создание токена GitHub</a> (войдите, если попросит).</li>
-            <li>Token name: напишите <b>shtab</b>. Ниже «Repository access» → «Only select repositories» → выберите <b>vineli46/shtab</b>.</li>
-            <li>Раскройте «Repository permissions» → найдите строку <b>Issues</b> → выберите «Read and write». Тут же найдите строку <b>Contents</b> → тоже «Read and write» (это для общего списка задач).</li>
-            <li>Внизу зелёная кнопка «Generate token» → скопируйте токен (начинается с github_pat_).</li>
-            <li>Вставьте его сюда и нажмите «Сохранить».</li>
+            <li>Откройте <a href="https://github.com/settings/tokens/new?description=shtab&scopes=repo" target="_blank" rel="noopener">эту ссылку</a> (войдите в GitHub, если попросит) — нужные галочки там уже расставлены.</li>
+            <li>В списке «Expiration» выберите <b>No expiration</b>, прокрутите вниз и нажмите зелёную кнопку <b>Generate token</b>.</li>
+            <li>Скопируйте появившийся код (начинается с ghp_), вставьте в поле ниже и нажмите «Сохранить».</li>
           </ol>
           <div class="task-add">
             <input id="fbkey" type="password" placeholder="github_pat_...">
@@ -662,6 +660,15 @@
     /* ── Руки Фейбла: задания через GitHub ── */
     var FBKEY='shtab-ghpat', fbKey=null;
     try{fbKey=localStorage.getItem(FBKEY);}catch(e){}
+    /* токен можно передать один раз в адресе страницы: #pat=… (Фейбл подключает мак сам) */
+    (function(){
+      var m=location.hash.match(/[#&]pat=([^&]+)/);
+      if(m){
+        fbKey=decodeURIComponent(m[1]);
+        try{localStorage.setItem(FBKEY,fbKey);}catch(e){}
+        history.replaceState(null,'',location.pathname+location.search);
+      }
+    })();
     var fbcfg=document.getElementById('fbcfg'),
         fbsum=document.getElementById('fbsum'),
         fbkeyIn=document.getElementById('fbkey'),
@@ -739,7 +746,7 @@
     });
     fbsaveBtn.addEventListener('click',function(){
       var v=fbkeyIn.value.trim();
-      if(v.indexOf('github_pat_')!==0&&v.indexOf('ghp_')!==0){jstatus.textContent='Токен должен начинаться с github_pat_ — скопируйте его целиком.';return;}
+      if(v.indexOf('github_pat_')!==0&&v.indexOf('ghp_')!==0&&v.indexOf('gho_')!==0){jstatus.textContent='Токен должен начинаться с ghp_ — скопируйте его целиком.';return;}
       fbKey=v; try{localStorage.setItem(FBKEY,v);}catch(e){}
       fbkeyIn.value=''; fbcfg.open=false; fbUI(); pullTasks();
       sayOut('Руки Фейбла подключены, задачи теперь общие на всех устройствах. Говорите задание — например: поменяй, исправь, обнови — я передам, Фейбл выполнит.');
