@@ -109,6 +109,17 @@
   .vsel{font-family:var(--mono);font-size:11px;letter-spacing:.05em;color:var(--muted);background:var(--panel-2);border:1px solid var(--line);border-radius:99px;padding:7px 12px;cursor:pointer;max-width:200px}
   .vsel:focus-visible{outline:2px solid var(--glow);outline-offset:2px}
 
+  /* ── ИИ-мозг ── */
+  .aicfg{border:1px solid var(--line);border-radius:10px;background:var(--panel-2)}
+  .aicfg summary{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--glow);padding:9px 14px;cursor:pointer;list-style:none}
+  .aicfg summary::-webkit-details-marker{display:none}
+  .aicfg summary::before{content:"▸ "}
+  .aicfg[open] summary::before{content:"▾ "}
+  .aicfg .aibody{padding:2px 14px 12px;display:flex;flex-direction:column;gap:8px;font-size:13.5px}
+  .aicfg ol{padding-left:20px;display:flex;flex-direction:column;gap:4px}
+  .aicfg a{color:var(--glow)}
+  .ainote{color:var(--muted);font-size:12.5px}
+
   /* ── Задачи ── */
   .tasks{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
   .task-add{display:flex;gap:8px;margin-bottom:12px}
@@ -172,6 +183,23 @@
         <input id="qin" type="text" placeholder="Или спросите текстом — на клавиатуре есть значок микрофона для диктовки">
         <button id="qask" class="chip">Спросить</button>
       </div>
+      <details class="aicfg" id="aicfg">
+        <summary id="aisum">Подключить ИИ-мозг</summary>
+        <div class="aibody">
+          <p>С ним Джарвис поймёт любой вопрос, а не только команды. Настройка один раз, 3 минуты, бесплатно:</p>
+          <ol>
+            <li>Откройте <a href="https://openrouter.ai" target="_blank" rel="noopener">openrouter.ai</a> → кнопка «Sign in» → «Continue with Google» — войдите своей почтой.</li>
+            <li>Откройте <a href="https://openrouter.ai/settings/keys" target="_blank" rel="noopener">страницу ключей</a> → «Create API Key» → любое имя → «Create» → скопируйте ключ (начинается с sk-or-).</li>
+            <li>Вставьте ключ в поле ниже и нажмите «Сохранить».</li>
+          </ol>
+          <div class="task-add">
+            <input id="aikey" type="password" placeholder="sk-or-...">
+            <button id="aisave" class="chip">Сохранить</button>
+            <button id="aidel" class="chip" hidden>Отключить</button>
+          </div>
+          <p class="ainote">Ключ хранится только в этом браузере, посетители страницы его не видят. Бесплатного лимита хватает на десятки вопросов в день.</p>
+        </div>
+      </details>
       <div class="jout" id="jout" hidden>
         <div class="you" id="jyou" hidden></div>
         <div id="jtext"></div>
@@ -504,6 +532,105 @@
     });
     renderTasks();
 
+    /* ── ИИ-мозг (OpenRouter, ключ только в этом браузере) ── */
+    var AIKEY='shtab-orkey', aiKey=null;
+    try{aiKey=localStorage.getItem(AIKEY);}catch(e){}
+    var aicfg=document.getElementById('aicfg'),
+        aisum=document.getElementById('aisum'),
+        aikeyIn=document.getElementById('aikey'),
+        aisaveBtn=document.getElementById('aisave'),
+        aidelBtn=document.getElementById('aidel');
+    function aiUI(){
+      if(aiKey){aisum.textContent='ИИ-мозг: подключён'; aidelBtn.hidden=false;}
+      else{aisum.textContent='Подключить ИИ-мозг (понимает любые вопросы)'; aidelBtn.hidden=true;}
+    }
+    aiUI();
+    aisaveBtn.addEventListener('click',function(){
+      var v=aikeyIn.value.trim();
+      if(v.indexOf('sk-or-')!==0){jstatus.textContent='Ключ должен начинаться с sk-or- — скопируйте его целиком.';return;}
+      aiKey=v; try{localStorage.setItem(AIKEY,v);}catch(e){}
+      aikeyIn.value=''; aicfg.open=false; aiUI();
+      var hello='ИИ-мозг подключён. Теперь спрашивайте свободно, своими словами — я пойму.';
+      jyou.hidden=true; jtext.textContent=hello; jout.hidden=false; speak(hello);
+    });
+    aidelBtn.addEventListener('click',function(){
+      aiKey=null; try{localStorage.removeItem(AIKEY);}catch(e){}
+      aiUI(); jstatus.textContent='ИИ-мозг отключён — работают быстрые команды.';
+    });
+    var AI_MODELS=[
+      'nvidia/nemotron-3-ultra-550b-a55b:free',
+      'nvidia/nemotron-3-super-120b-a12b:free',
+      'google/gemma-4-31b-it:free',
+      'google/gemma-4-26b-a4b-it:free',
+      'openai/gpt-oss-20b:free'
+    ];
+    function shtabContext(){
+      var st=document.querySelectorAll('.stat b'), lines=[];
+      lines.push('Сегодня: '+document.getElementById('today').textContent+'.');
+      lines.push('Проектов: '+txt(st[0])+'; работают сами: '+txt(st[1])+'; с блокерами: '+txt(st[2])+'.');
+      lines.push('Горящие сроки: '+deadlines().join('; ')+'.');
+      cards().forEach(function(c){
+        lines.push((c.agent?'Агент':'Проект')+' «'+c.name+'» — статус: '+c.status+'. '+c.sub
+          +(c.next?' Следующий шаг: '+c.next:'')+(c.stop?' Блокер: '+c.stop:''));
+      });
+      var open=tasks.filter(function(x){return !x.d;}).map(function(x){return x.t;});
+      var done=tasks.filter(function(x){return x.d;}).map(function(x){return x.t;});
+      lines.push('Открытые задачи: '+(open.join('; ')||'нет')+'.');
+      if(done.length)lines.push('Выполненные задачи: '+done.join('; ')+'.');
+      return lines.join('\n');
+    }
+    function askAI(question){
+      jstatus.textContent='Думаю…'; jstatus.classList.add('live');
+      var sys='Ты — Джарвис, голосовой ИИ-помощник Винели, владелицы службы доставки воды «Добро» в Курске. Отвечай только по-русски, коротко — одним-четырьмя предложениями, тёплым деловым тоном, на «вы». Ответ озвучивается вслух: без списков, без markdown, без эмодзи и без английских слов. Опирайся на данные штаба ниже; если вопрос не о них — отвечай из общих знаний, честно и по делу.\n\nДАННЫЕ ШТАБА:\n'+shtabContext();
+      var mi=0;
+      function fin(text){
+        jstatus.classList.remove('live');
+        jstatus.textContent='Слушаю вас — микрофон, поле вопроса или команда.';
+        jtext.textContent=text; jout.hidden=false;
+        speak(text);
+      }
+      function tryModel(){
+        if(mi>=AI_MODELS.length){
+          fin('Все бесплатные ИИ-модели сейчас заняты. Подождите минуту и спросите снова — или пользуйтесь быстрыми командами.');
+          return;
+        }
+        var ctrl=('AbortController' in window)?new AbortController():null;
+        var tm=ctrl?setTimeout(function(){ctrl.abort();},45000):null;
+        fetch('https://openrouter.ai/api/v1/chat/completions',{
+          method:'POST',
+          headers:{
+            'Authorization':'Bearer '+aiKey,
+            'Content-Type':'application/json',
+            'HTTP-Referer':'https://vineli46.github.io/shtab/',
+            'X-Title':'Shtab Vineli'
+          },
+          body:JSON.stringify({
+            model:AI_MODELS[mi],
+            messages:[{role:'system',content:sys},{role:'user',content:question}],
+            max_tokens:400, temperature:0.5
+          }),
+          signal:ctrl?ctrl.signal:undefined
+        }).then(function(r){
+          if(tm)clearTimeout(tm);
+          if(r.status===401){fin('Ключ не подошёл. Откройте «Подключить ИИ-мозг» и вставьте ключ заново.');return null;}
+          if(!r.ok){mi++;tryModel();return null;}
+          return r.json();
+        }).then(function(d){
+          if(!d)return;
+          var a=(d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content)||'';
+          a=a.replace(/<think>[\s\S]*?<\/think>/g,'').replace(/[*#`]/g,'').trim();
+          if(!a){mi++;tryModel();return;}
+          fin(a);
+        }).catch(function(){
+          if(tm)clearTimeout(tm);
+          fin(location.hostname==='vineli46.github.io'
+            ? 'Нет связи с ИИ. Проверьте интернет и спросите ещё раз — или пользуйтесь быстрыми командами.'
+            : 'На этой версии страницы ИИ недоступен. Откройте главную: vineli46.github.io/shtab');
+        });
+      }
+      tryModel();
+    }
+
     /* ── ответы ── */
     function brief(){
       var st=document.querySelectorAll('.stat b'),
@@ -540,19 +667,26 @@
         var words=norm(c.name).split(/[^a-zа-я0-9!]+/).filter(function(w){return w.length>=3;});
         var hits=words.filter(function(w){
           return qws.some(function(x){
-            return x===w||(x.length>=4&&w.indexOf(x)===0)||(w.length>=4&&x.indexOf(w)===0);
+            return x===w||(x.length>=4&&w.length>=4&&x.slice(0,4)===w.slice(0,4));
           });
         }).length;
         if(hits>0&&(!best||hits>best.hits))best={c:c,hits:hits};
       });
       return best&&best.c;
     }
+    function matchAdd(raw){
+      var q=norm(raw).replace(/джарвис/g,' ').trim();
+      alias.forEach(function(a){q=q.replace(a[0],a[1]);});
+      var m=q.match(/^(?:добавь|запиши|создай|поставь|напомни(?:\s+мне)?)\s+(?:задачу\s+|задача\s+|в задачи\s+)?(.+)$/);
+      if(m){addTask(m[1]);return 'Записала задачу: '+m[1]+'.';}
+      return null;
+    }
     function answer(raw){
       var q=norm(raw).replace(/джарвис/g,' ').trim();
       alias.forEach(function(a){q=q.replace(a[0],a[1]);});
-      var m=q.match(/^(?:добавь|запиши|создай|поставь)\s+(?:задачу\s+|задача\s+|в задачи\s+)?(.+)$/);
-      if(m){addTask(m[1]);return 'Записала задачу: '+m[1]+'.';}
-      if(/задач/.test(q)){
+      var added=matchAdd(raw);
+      if(added)return added;
+      if(/задач|дела\s*(на|у меня)|список дел/.test(q)){
         var open=tasks.filter(function(x){return !x.d;});
         return open.length
           ? 'Открытых задач '+open.length+'. '+open.map(function(x){return x.t;}).join('. ')+'.'
@@ -565,19 +699,22 @@
       var c=findCard(q);
       if(c) return c.name+'. Статус: '+c.status+'. '+c.sub
         +(c.stop?' Что мешает: '+c.stop:(c.next?' Следующий шаг: '+c.next:''));
-      if(/сводка|дела|обстановк|доклад|отчет|привет|здравств/.test(q)) return brief();
+      if(/сводка|дела|обстановк|доклад|отчет|привет|здравств|новост|нового|доброе|утро|происходит|расскажи/.test(q)) return brief();
       return 'Не разобрала. Скажите: «доложи обстановку», «дедлайны», «блокеры», «задачи», «агенты», «добавь задачу…» — или назовите проект, например «что с заводом».';
     }
-    function handle(raw,heard){
+    function handle(raw,heard,forceQuick){
       if(heard){jyou.hidden=false;jyou.textContent='Вы: '+raw;}else{jyou.hidden=true;}
+      var added=matchAdd(raw);
+      if(added){jtext.textContent=added;jout.hidden=false;speak(added);return;}
+      if(!forceQuick&&aiKey){askAI(raw);return;}
       var a=answer(raw);
       jtext.textContent=a; jout.hidden=false;
       speak(a);
     }
 
-    /* ── кнопки-команды ── */
-    Array.prototype.forEach.call(document.querySelectorAll('.chip'),function(ch){
-      ch.addEventListener('click',function(){handle(ch.dataset.q,false);});
+    /* ── кнопки-команды (мгновенные, без ИИ) ── */
+    Array.prototype.forEach.call(document.querySelectorAll('.chips .chip'),function(ch){
+      ch.addEventListener('click',function(){handle(ch.dataset.q,false,true);});
     });
 
     /* ── вопрос текстом (и диктовкой с клавиатуры) ── */
