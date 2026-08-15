@@ -1,0 +1,628 @@
+<title>Штаб Винели — все проекты на ладони</title>
+<style>
+  :root{
+    --bg:#070b14;
+    --panel:#0d1524;
+    --panel-2:#101a2c;
+    --line:rgba(96,165,250,.16);
+    --line-strong:rgba(96,165,250,.35);
+    --glow:#4da6ff;
+    --text:#e6eef8;
+    --muted:#8fa3bf;
+    --ok:#34d399;
+    --warn:#f1c232;
+    --bad:#f87171;
+    --mono:"SF Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    line-height:1.55;
+    min-height:100vh;
+    background-image:
+      radial-gradient(ellipse 70% 45% at 50% -5%, rgba(77,166,255,.13), transparent 60%),
+      radial-gradient(ellipse 40% 30% at 85% 110%, rgba(77,166,255,.06), transparent 60%);
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:40px 20px 64px}
+
+  /* ── Шапка с ядром ── */
+  header{display:flex;align-items:center;gap:28px;padding:8px 0 30px;flex-wrap:wrap}
+  .core{position:relative;width:132px;height:132px;flex:none}
+  .core .ring{position:absolute;inset:0;border-radius:50%;border:1px solid var(--line-strong)}
+  .core .r2{inset:14px;border-style:dashed;opacity:.7;animation:spin 24s linear infinite}
+  .core .r3{inset:30px;border-color:rgba(125,211,252,.5);animation:spin 16s linear infinite reverse}
+  .core .heart{
+    position:absolute;inset:46px;border-radius:50%;
+    background:radial-gradient(circle at 40% 35%, #bfe3ff, var(--glow) 55%, #1d4ed8 100%);
+    box-shadow:0 0 24px rgba(77,166,255,.75), 0 0 70px rgba(77,166,255,.35);
+    animation:pulse 3.2s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{transform:scale(1);opacity:.92}50%{transform:scale(1.12);opacity:1}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion: reduce){.core .heart,.core .r2,.core .r3{animation:none}}
+
+  .hello .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--glow);margin-bottom:6px}
+  .hello h1{font-size:clamp(24px,4.5vw,34px);font-weight:700;letter-spacing:-.01em;text-wrap:balance}
+  .hello .date{color:var(--muted);font-size:14px;margin-top:6px;font-family:var(--mono)}
+
+  /* ── Сводка ── */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .stat b{display:block;font-family:var(--mono);font-size:30px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.1}
+  .stat span{font-size:12.5px;color:var(--muted)}
+  .stat.s-ok b{color:var(--ok)} .stat.s-warn b{color:var(--warn)} .stat.s-bad b{color:var(--bad)} .stat.s-blue b{color:var(--glow)}
+
+  /* ── Дедлайны ── */
+  .deadlines{display:grid;gap:10px;margin-bottom:34px}
+  .dl{display:flex;align-items:baseline;gap:14px;background:linear-gradient(90deg,rgba(241,194,50,.10),transparent 60%);border:1px solid rgba(241,194,50,.35);border-radius:10px;padding:12px 16px;flex-wrap:wrap}
+  .dl.hot{background:linear-gradient(90deg,rgba(248,113,113,.12),transparent 60%);border-color:rgba(248,113,113,.45)}
+  .dl .when{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--warn);white-space:nowrap}
+  .dl.hot .when{color:var(--bad)}
+  .dl .what{font-size:14.5px}
+  .dl .left{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap}
+
+  /* ── Группы и карточки ── */
+  section{margin-bottom:36px}
+  section>h2{font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--glow);border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:16px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+  .card{
+    position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:16px 16px 14px 20px;overflow:hidden;
+    display:flex;flex-direction:column;gap:8px;
+  }
+  .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--stripe,var(--glow))}
+  .card[data-s="ok"]{--stripe:var(--ok)}
+  .card[data-s="warn"]{--stripe:var(--warn)}
+  .card[data-s="bad"]{--stripe:var(--bad)}
+  .pill{
+    align-self:flex-start;font-family:var(--mono);font-size:10.5px;font-weight:600;
+    letter-spacing:.14em;text-transform:uppercase;border-radius:99px;padding:3px 10px;
+    border:1px solid var(--stripe,var(--glow));color:var(--stripe,var(--glow));
+  }
+  .card h3{font-size:16.5px;font-weight:650;letter-spacing:-.005em}
+  .card .sub{font-size:13.5px;color:var(--muted)}
+  .card .next{font-size:13.5px;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-top:auto}
+  .card .next b{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--glow);display:block;margin-bottom:2px;font-weight:600}
+  .card .stop{font-size:13.5px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.35);border-radius:8px;padding:8px 10px;margin-top:auto}
+  .card .stop b{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--bad);display:block;margin-bottom:2px;font-weight:600}
+
+  /* ── Джарвис: голосовое управление ── */
+  .jarvis{display:flex;gap:16px;align-items:flex-start;background:var(--panel);border:1px solid var(--line-strong);border-radius:14px;padding:16px;margin-bottom:14px}
+  .mic{flex:none;width:64px;height:64px;border-radius:50%;border:1px solid var(--line-strong);background:radial-gradient(circle at 35% 30%,#16233c,#0b1322);color:var(--glow);cursor:pointer;display:grid;place-items:center;transition:box-shadow .2s}
+  .mic:hover{box-shadow:0 0 18px rgba(77,166,255,.45)}
+  .mic:focus-visible,.chip:focus-visible{outline:2px solid var(--glow);outline-offset:3px}
+  .mic.listening{color:#fff;background:radial-gradient(circle at 35% 30%,#2563eb,#1e3a8a);animation:micpulse 1.4s ease-out infinite}
+  @keyframes micpulse{0%{box-shadow:0 0 0 0 rgba(77,166,255,.55)}100%{box-shadow:0 0 0 22px rgba(77,166,255,0)}}
+  .mic.off{opacity:.35;cursor:not-allowed}
+  .jbody{flex:1;min-width:0;display:flex;flex-direction:column;gap:10px}
+  .jstatus{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--muted)}
+  .jstatus.live{color:var(--glow)}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text);background:var(--panel-2);border:1px solid var(--line);border-radius:99px;padding:7px 14px;cursor:pointer;transition:border-color .15s,color .15s}
+  .chip:hover{border-color:var(--glow);color:var(--glow)}
+  .jout{font-size:14.5px;background:var(--panel-2);border:1px solid var(--line);border-left:3px solid var(--glow);border-radius:8px;padding:10px 12px}
+  .jout .you{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-bottom:4px}
+  @media (prefers-reduced-motion: reduce){.mic.listening{animation:none}}
+  .vsel{font-family:var(--mono);font-size:11px;letter-spacing:.05em;color:var(--muted);background:var(--panel-2);border:1px solid var(--line);border-radius:99px;padding:7px 12px;cursor:pointer;max-width:200px}
+  .vsel:focus-visible{outline:2px solid var(--glow);outline-offset:2px}
+
+  /* ── Задачи ── */
+  .tasks{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .task-add{display:flex;gap:8px;margin-bottom:12px}
+  .task-add input{flex:1;min-width:0;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px;font-family:var(--sans)}
+  .task-add input::placeholder{color:var(--muted)}
+  .task-add input:focus{outline:none;border-color:var(--glow)}
+  ul.tlist{list-style:none;display:flex;flex-direction:column;gap:6px}
+  .tlist li{display:flex;align-items:flex-start;gap:10px;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:9px 10px}
+  .tlist li.done .ttext{color:var(--muted);text-decoration:line-through}
+  .tcheck{appearance:none;-webkit-appearance:none;flex:none;width:18px;height:18px;margin-top:2px;border:1px solid var(--line-strong);border-radius:5px;background:var(--panel);cursor:pointer;display:grid;place-items:center}
+  .tcheck:checked{background:var(--ok);border-color:var(--ok)}
+  .tcheck:checked::after{content:"✓";font-size:12px;font-weight:700;color:#06281c;line-height:1}
+  .tcheck:focus-visible{outline:2px solid var(--glow);outline-offset:2px}
+  .ttext{flex:1;font-size:14px;min-width:0;overflow-wrap:break-word}
+  .ttext[contenteditable="true"],.ttext[contenteditable="plaintext-only"]{outline:1px solid var(--glow);border-radius:4px;padding:0 4px}
+  .tbtn{flex:none;background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;padding:2px 4px}
+  .tbtn:hover{color:var(--glow)}
+  .tbtn.tdel:hover{color:var(--bad)}
+  .tbtn:focus-visible{outline:2px solid var(--glow);outline-offset:2px;border-radius:4px}
+
+  footer{border-top:1px solid var(--line);padding-top:18px;color:var(--muted);font-size:13px}
+  footer .upd{font-family:var(--mono);font-size:12px;color:var(--glow);margin-bottom:4px}
+</style>
+
+<div class="wrap">
+
+  <header>
+    <div class="core" aria-hidden="true">
+      <div class="ring"></div>
+      <div class="ring r2"></div>
+      <div class="ring r3"></div>
+      <div class="heart"></div>
+    </div>
+    <div class="hello">
+      <div class="eyebrow">Штаб · Добро · AQVIOL</div>
+      <h1>Добрый день, Винели. Все проекты — на ладони.</h1>
+      <div class="date" id="today">сегодня</div>
+    </div>
+  </header>
+
+  <div class="jarvis">
+    <button id="mic" class="mic" aria-label="Голосовая команда">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <rect x="9" y="3" width="6" height="11" rx="3"></rect>
+        <path d="M5 11a7 7 0 0 0 14 0"></path>
+        <line x1="12" y1="18" x2="12" y2="21"></line>
+      </svg>
+    </button>
+    <div class="jbody">
+      <div class="jstatus" id="jstatus">Нажмите микрофон и спросите — отвечу голосом. Или выберите команду.</div>
+      <div class="chips">
+        <button class="chip" data-q="доложи обстановку">Доложи обстановку</button>
+        <button class="chip" data-q="дедлайны">Дедлайны</button>
+        <button class="chip" data-q="блокеры">Блокеры</button>
+        <button class="chip" data-q="следующие шаги">Следующие шаги</button>
+        <button class="chip" data-q="какие задачи">Задачи</button>
+        <button class="chip" data-q="какие агенты">Агенты</button>
+        <select id="vsel" class="vsel" aria-label="Выбор голоса" hidden></select>
+      </div>
+      <div class="task-add ask">
+        <input id="qin" type="text" placeholder="Или спросите текстом — на клавиатуре есть значок микрофона для диктовки">
+        <button id="qask" class="chip">Спросить</button>
+      </div>
+      <div class="jout" id="jout" hidden>
+        <div class="you" id="jyou" hidden></div>
+        <div id="jtext"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat s-blue"><b>14</b><span>проектов в работе</span></div>
+    <div class="stat s-ok"><b>5</b><span>работают сами</span></div>
+    <div class="stat s-bad"><b>4</b><span>стоят из-за блокера</span></div>
+    <div class="stat s-warn"><b>2</b><span>горящих дедлайна</span></div>
+  </div>
+
+  <div class="deadlines">
+    <div class="dl" data-due="2026-08-20">
+      <span class="when">до 20.08</span>
+      <span class="what">Wildberries: успеть отгрузить поставки бутылочек до повышения тарифов</span>
+      <span class="left"></span>
+    </div>
+    <div class="dl" data-due="2026-08-27">
+      <span class="when">до 27.08</span>
+      <span class="what">Ozon: зафиксировать текущие тарифы на будущий сезон</span>
+      <span class="left"></span>
+    </div>
+  </div>
+
+  <section>
+    <h2>Задачи — открытых: <span id="topen">0</span></h2>
+    <div class="tasks">
+      <div class="task-add">
+        <input id="tin" type="text" placeholder="Новая задача… или скажите в микрофон: «добавь задачу…»">
+        <button id="tadd" class="chip">Добавить</button>
+      </div>
+      <ul class="tlist" id="tlist"></ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>Вода «Добро» — основной бизнес</h2>
+    <div class="grid">
+      <article class="card" data-s="ok">
+        <span class="pill">Работает</span>
+        <h3>Сайт dobro</h3>
+        <p class="sub">Акции «2 бутыли по цене одной» идут, блок «Мы позаботились» перекрашен в жёлтый, главная ускорена до 5,7 МБ.</p>
+        <p class="next"><b>Следующий шаг</b>Ничего не горит — только следить и обновлять акции.</p>
+      </article>
+      <article class="card" data-s="ok">
+        <span class="pill">Работает</span>
+        <h3>Мобильное приложение</h3>
+        <p class="sub">Новый дизайн «серый + жёлтый» как у сайта, 4 акционных баннера со ссылками на товары.</p>
+        <p class="next"><b>Следующий шаг</b>Понаблюдать, растут ли заказы через приложение после редизайна.</p>
+      </article>
+      <article class="card" data-s="warn">
+        <span class="pill">Решить</span>
+        <h3>Возврат клиентов</h3>
+        <p class="sub">Анализ базы готов: 41% клиентов заказали один раз и пропали, 1613 «спящих», юрлиц всего 6% (у рынка — 80%).</p>
+        <p class="next"><b>Следующий шаг</b>Выбрать первое действие: обзвон спящих или предложение для организаций.</p>
+      </article>
+      <article class="card" data-s="warn">
+        <span class="pill">В работе</span>
+        <h3>Новый завод в Курске</h3>
+        <p class="sub">Решение принято 15.08: строим в Курске (60–80 млн ₽, земля уже куплена). Запуск этапами, сначала линия 19 л.</p>
+        <p class="next"><b>Следующий шаг</b>Переговоры с банком о кредите траншами + снимать серию «от поля до первой бутыли».</p>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <h2>Бутылочки AQVIOL — маркетплейсы</h2>
+    <div class="grid">
+      <article class="card" data-s="bad">
+        <span class="pill">Срочно</span>
+        <h3>Стратегия Ozon и WB на 2026</h3>
+        <p class="sub">Исследование на 39 приёмов готово, но решения не приняты — а дедлайны уже в шапке этой страницы.</p>
+        <p class="stop"><b>Что мешает</b>Нужны ваши решения по поставкам и тарифам до 20 и 27 августа.</p>
+      </article>
+      <article class="card" data-s="ok">
+        <span class="pill">Работает</span>
+        <h3>Продажи на Ozon и WB</h3>
+        <p class="sub">Бутылочки стабильно продаются — больше 300 штук в месяц на двух площадках.</p>
+        <p class="next"><b>Следующий шаг</b>Вкладыши в посылки со ссылкой на свой сайт — для повторных покупок.</p>
+      </article>
+      <article class="card" data-s="bad">
+        <span class="pill">Блокер</span>
+        <h3>Сайт-магазин AQVIOL</h3>
+        <p class="sub">Магазин готов, 21 товар загружен из Ozon, корзина отправляет заказ в WhatsApp.</p>
+        <p class="stop"><b>Что мешает</b>В WhatsApp стоит номер-заглушка — заказы уходят в никуда. Нужен настоящий номер.</p>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <h2>Контент и продвижение</h2>
+    <div class="grid">
+      <article class="card" data-s="bad">
+        <span class="pill">Блокер</span>
+        <h3>Ролик «Глубина»</h3>
+        <p class="sub">Текст утверждён, раскадровка из 38 карточек готова, карточка персонажа собрана.</p>
+        <p class="stop"><b>Что мешает</b>Ждём ваш вход на syntx.ai — потом генерации в Seedance и линде-монтаж.</p>
+      </article>
+      <article class="card" data-s="warn">
+        <span class="pill">Решить</span>
+        <h3>Контент-завод</h3>
+        <p class="sub">Исследование готово: доска Kaiten как «пульт» (бесплатно до 5 человек) + SmmBox для автопостинга от 300 ₽.</p>
+        <p class="next"><b>Следующий шаг</b>Ваше «да» — и заводим доску Kaiten с календарём публикаций.</p>
+      </article>
+      <article class="card" data-s="ok">
+        <span class="pill">Работает</span>
+        <h3>Дзен-канал «Добро»</h3>
+        <p class="sub">Канал создан, 12 школьных статей готовы. Облачный агент пишет черновики по вторникам и пятницам в 9:00.</p>
+        <p class="next"><b>Следующий шаг</b>Публиковать готовые статьи вручную — редактор Дзена не любит автовставку.</p>
+      </article>
+      <article class="card" data-s="warn">
+        <span class="pill">В работе</span>
+        <h3>Инструменты для соцсетей</h3>
+        <p class="sub">Подключены: аналитика metricool, Google Trends, Reddit, субтитры YouTube.</p>
+        <p class="next"><b>Следующий шаг</b>Войти в metricool через /mcp и добавить ключи для VK и Telegram.</p>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <h2>Приложения и обучение</h2>
+    <div class="grid">
+      <article class="card" data-s="ok">
+        <span class="pill">Работает</span>
+        <h3>«Помню! 2» — сад памяти</h3>
+        <p class="sub">Приложение для запоминания опубликовано и открывается без входа: pomnyu.higgsfield.app/2.</p>
+        <p class="next"><b>Следующий шаг</b>Пользоваться и копить наблюдения — что улучшить в следующей версии.</p>
+      </article>
+      <article class="card" data-s="bad">
+        <span class="pill">Блокер</span>
+        <h3>Remembo для App Store</h3>
+        <p class="sub">iOS-версия «Помню!» собрана: два языка, уведомления, иконка — всё готово к публикации.</p>
+        <p class="stop"><b>Что мешает</b>Нужен аккаунт Apple Developer ($99) — оплата только зарубежной картой.</p>
+      </article>
+      <article class="card" data-s="warn">
+        <span class="pill">В работе</span>
+        <h3>Облачные навыки Claude</h3>
+        <p class="sub">Библиотека из 130 навыков выложена на GitHub, чтобы облачные агенты умели то же, что и Claude на маке.</p>
+        <p class="next"><b>Следующий шаг</b>Подключить GitHub к claude.ai/code и указать репозиторий агентам.</p>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <h2>Агенты — работают без вас</h2>
+    <div class="grid">
+      <article class="card agent" data-s="ok">
+        <span class="pill">Активен</span>
+        <h3>Бот: утренняя сводка в Telegram</h3>
+        <p class="sub">Бот «Добро» присылает продажи воды и цифры Ozon и Wildberries ещё до начала рабочего дня.</p>
+        <p class="next"><b>Расписание</b>Каждое утро в 9:02</p>
+      </article>
+      <article class="card agent" data-s="ok">
+        <span class="pill">Активен</span>
+        <h3>Автор Дзен-канала</h3>
+        <p class="sub">Облачный агент пишет черновики познавательных статей для канала «Добро» — вам остаётся вычитать и опубликовать.</p>
+        <p class="next"><b>Расписание</b>Вторник и пятница, 9:00</p>
+      </article>
+      <article class="card agent" data-s="ok">
+        <span class="pill">Активен</span>
+        <h3>Хранитель штаба</h3>
+        <p class="sub">Claude пересобирает эту страницу после каждой работы, где что-то изменилось. Даты и сроки страница считает сама при открытии.</p>
+        <p class="next"><b>Расписание</b>После каждого изменения в проектах</p>
+      </article>
+    </div>
+  </section>
+
+  <footer>
+    <div class="upd">Карточки пересобраны: 16.08.2026</div>
+    <p>Дата и счётчики дней до дедлайнов пересчитываются сами при каждом открытии страницы. Карточки проектов Claude обновляет автоматически после каждой работы, где что-то изменилось; в любой момент можно сказать «обнови штаб». Задачи хранятся в браузере этого устройства — редактируйте их прямо на странице.</p>
+  </footer>
+
+</div>
+
+<script>
+  (function(){
+    var today = new Date(); today.setHours(0,0,0,0);
+    var fmt = new Intl.DateTimeFormat('ru-RU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    document.getElementById('today').textContent = fmt.format(today);
+
+    function word(n){
+      var a=Math.abs(n), m10=a%10, m100=a%100;
+      if(m10===1 && m100!==11) return 'день';
+      if(m10>=2 && m10<=4 && (m100<12 || m100>14)) return 'дня';
+      return 'дней';
+    }
+    document.querySelectorAll('.dl[data-due]').forEach(function(el){
+      var due = new Date(el.dataset.due+'T00:00:00');
+      var d = Math.round((due - today)/86400000);
+      var left = el.querySelector('.left');
+      if(d>1){ left.textContent = 'осталось '+d+' '+word(d); }
+      else if(d===1){ left.textContent = 'остался 1 день'; }
+      else if(d===0){ left.textContent = 'сегодня — последний день'; }
+      else { left.textContent = 'срок прошёл '+(-d)+' '+word(-d)+' назад'; }
+      if(d<=5) el.classList.add('hot');
+    });
+  })();
+</script>
+
+<script>
+  (function(){
+    var micBtn=document.getElementById('mic'),
+        jstatus=document.getElementById('jstatus'),
+        jout=document.getElementById('jout'),
+        jyou=document.getElementById('jyou'),
+        jtext=document.getElementById('jtext');
+
+    /* ── ИИ-голос Джарвиса ── */
+    var canSpeak='speechSynthesis' in window, ruVoice=null,
+        vsel=document.getElementById('vsel');
+    function ruVoices(){
+      return speechSynthesis.getVoices().filter(function(v){return /^ru/i.test(v.lang);});
+    }
+    function pickVoice(){
+      var vs=ruVoices(), saved=null;
+      try{saved=localStorage.getItem('shtab-voice');}catch(e){}
+      ruVoice=vs.find(function(v){return v.name===saved;})
+        ||vs.find(function(v){return /yuri|юрий|dmitri|дмитрий|pavel|павел|male/i.test(v.name);})
+        ||vs.find(function(v){return v.name==='Milena';})||vs[0]||null;
+      if(vsel){
+        vsel.innerHTML='';
+        vs.forEach(function(v){
+          var o=document.createElement('option');
+          o.value=v.name; o.textContent=v.name;
+          if(ruVoice&&v.name===ruVoice.name)o.selected=true;
+          vsel.appendChild(o);
+        });
+        vsel.hidden=vs.length<2;
+      }
+    }
+    if(canSpeak){pickVoice();speechSynthesis.onvoiceschanged=pickVoice;}
+    if(vsel)vsel.addEventListener('change',function(){
+      var v=ruVoices().find(function(x){return x.name===vsel.value;});
+      if(v){
+        ruVoice=v;
+        try{localStorage.setItem('shtab-voice',v.name);}catch(e){}
+        speak('Так звучит этот голос, Винели.');
+      }
+    });
+    function speak(t){
+      if(!canSpeak)return;
+      speechSynthesis.cancel();
+      var u=new SpeechSynthesisUtterance(t);
+      u.lang='ru-RU'; if(ruVoice)u.voice=ruVoice;
+      u.pitch=.72; u.rate=1.03;
+      u.onstart=function(){jstatus.textContent='Говорю…';jstatus.classList.add('live');};
+      u.onend=function(){jstatus.textContent='Слушаю вас в любой момент — микрофон или команда.';jstatus.classList.remove('live');};
+      speechSynthesis.speak(u);
+    }
+
+    /* ── данные из карточек штаба ── */
+    function txt(el){return el?el.textContent.trim():'';}
+    function cards(){
+      return Array.prototype.map.call(document.querySelectorAll('.card'),function(c){
+        return {
+          agent:c.classList.contains('agent'),
+          name:txt(c.querySelector('h3')),
+          status:txt(c.querySelector('.pill')),
+          sub:txt(c.querySelector('.sub')),
+          next:txt(c.querySelector('.next')).replace(/^(Следующий шаг|Расписание)/,''),
+          stop:txt(c.querySelector('.stop')).replace(/^Что мешает/,'')
+        };
+      });
+    }
+    function deadlines(){
+      return Array.prototype.map.call(document.querySelectorAll('.dl'),function(d){
+        return txt(d.querySelector('.what'))+' — '+txt(d.querySelector('.left'));
+      });
+    }
+
+    /* ── задачи (хранятся в браузере) ── */
+    var TKEY='shtab-tasks',
+        tlist=document.getElementById('tlist'),
+        topen=document.getElementById('topen'),
+        tin=document.getElementById('tin');
+    var seedTasks=[
+      {t:'Дать решения по поставкам Wildberries — до 20 августа',d:false},
+      {t:'Зафиксировать тарифы Ozon — до 27 августа',d:false},
+      {t:'Вставить настоящий номер WhatsApp на сайт AQVIOL',d:false},
+      {t:'Войти на syntx.ai — разблокировать ролик «Глубина»',d:false},
+      {t:'Решить по доске Kaiten для контент-завода',d:false}
+    ];
+    function loadTasks(){
+      try{var s=localStorage.getItem(TKEY);if(s)return JSON.parse(s);}catch(e){}
+      return seedTasks.map(function(x){return {t:x.t,d:x.d};});
+    }
+    var tasks=loadTasks();
+    function saveTasks(){try{localStorage.setItem(TKEY,JSON.stringify(tasks));}catch(e){}}
+    function renderTasks(){
+      tlist.innerHTML='';
+      tasks.forEach(function(task,i){
+        var li=document.createElement('li'); if(task.d)li.className='done';
+        var cb=document.createElement('input');
+        cb.type='checkbox'; cb.className='tcheck'; cb.checked=task.d;
+        cb.setAttribute('aria-label','Выполнено');
+        cb.addEventListener('change',function(){task.d=cb.checked;saveTasks();renderTasks();});
+        var sp=document.createElement('span'); sp.className='ttext'; sp.textContent=task.t;
+        sp.addEventListener('blur',function(){
+          sp.contentEditable='false';
+          var v=sp.textContent.trim();
+          if(v){task.t=v;}else{sp.textContent=task.t;}
+          saveTasks();
+        });
+        sp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();sp.blur();}});
+        var ed=document.createElement('button');
+        ed.className='tbtn'; ed.textContent='✎'; ed.setAttribute('aria-label','Редактировать');
+        ed.addEventListener('click',function(){
+          try{sp.contentEditable='plaintext-only';}catch(e){sp.contentEditable='true';}
+          sp.focus();
+          var r=document.createRange(); r.selectNodeContents(sp); r.collapse(false);
+          var s=getSelection(); s.removeAllRanges(); s.addRange(r);
+        });
+        var del=document.createElement('button');
+        del.className='tbtn tdel'; del.textContent='×'; del.setAttribute('aria-label','Удалить');
+        del.addEventListener('click',function(){tasks.splice(i,1);saveTasks();renderTasks();});
+        li.appendChild(cb); li.appendChild(sp); li.appendChild(ed); li.appendChild(del);
+        tlist.appendChild(li);
+      });
+      topen.textContent=tasks.filter(function(x){return !x.d;}).length;
+    }
+    function addTask(t){tasks.unshift({t:t,d:false});saveTasks();renderTasks();}
+    document.getElementById('tadd').addEventListener('click',function(){
+      var v=tin.value.trim(); if(v){addTask(v);tin.value='';}
+    });
+    tin.addEventListener('keydown',function(e){
+      if(e.key==='Enter'){var v=tin.value.trim();if(v){addTask(v);tin.value='';}}
+    });
+    renderTasks();
+
+    /* ── ответы ── */
+    function brief(){
+      var st=document.querySelectorAll('.stat b'),
+          dls=deadlines(),
+          blocked=cards().filter(function(c){return c.stop;});
+      return 'Докладываю, Винели. В работе '+txt(st[0])+' проектов: '+txt(st[1])+' работают сами, '
+        +txt(st[2])+' стоят из-за блокеров. Самое горящее: '+dls[0]+'. '
+        +(blocked.length?'Блокеры: '+blocked.map(function(c){return c.name;}).join('; ')+'. ':'')
+        +'Открытых задач: '+tasks.filter(function(x){return !x.d;}).length+'. '
+        +'Спросите про дедлайны, блокеры, задачи, агентов — или назовите любой проект.';
+    }
+    function sayDeadlines(){return 'Горящие сроки. '+deadlines().join('. ')+'.';}
+    function sayBlockers(){
+      var b=cards().filter(function(c){return c.stop;});
+      if(!b.length)return 'Блокеров нет — всё движется.';
+      return 'Сейчас '+b.length+' блокера. '+b.map(function(c){return c.name+'. '+c.stop;}).join(' ');
+    }
+    function saySteps(){
+      var c=cards().filter(function(x){return x.next&&!x.agent;}).slice(0,4);
+      return 'Ближайшие шаги. '+c.map(function(x){return x.name+': '+x.next;}).join(' ');
+    }
+    function sayAgents(){
+      var ag=cards().filter(function(x){return x.agent;});
+      return 'Без вас работают '+ag.length+' агента. '
+        +ag.map(function(x){return x.name+'. '+x.next+'.';}).join(' ');
+    }
+    function norm(s){return s.toLowerCase().replace(/ё/g,'е');}
+    var alias=[[/озон/g,'ozon'],[/ва[йл]+д?бер+[ии]з?с?/g,'wb'],[/валберис/g,'wb'],[/аквиол/g,'aqviol'],
+      [/клод/g,'claude'],[/телеграм/g,'telegram'],[/ремембо/g,'remembo'],[/добро/g,'dobro добро']];
+    function findCard(q){
+      var qws=q.split(/[^a-zа-я0-9!]+/).filter(function(w){return w.length>=3;}),best=null;
+      cards().forEach(function(c,i){
+        var el=document.querySelectorAll('.card')[i];
+        var words=norm(c.name).split(/[^a-zа-я0-9!]+/).filter(function(w){return w.length>=3;});
+        var hits=words.filter(function(w){
+          return qws.some(function(x){
+            return x===w||(x.length>=4&&w.indexOf(x)===0)||(w.length>=4&&x.indexOf(w)===0);
+          });
+        }).length;
+        if(hits>0&&(!best||hits>best.hits))best={c:c,hits:hits};
+      });
+      return best&&best.c;
+    }
+    function answer(raw){
+      var q=norm(raw).replace(/джарвис/g,' ').trim();
+      alias.forEach(function(a){q=q.replace(a[0],a[1]);});
+      var m=q.match(/^(?:добавь|запиши|создай|поставь)\s+(?:задачу\s+|задача\s+|в задачи\s+)?(.+)$/);
+      if(m){addTask(m[1]);return 'Записала задачу: '+m[1]+'.';}
+      if(/задач/.test(q)){
+        var open=tasks.filter(function(x){return !x.d;});
+        return open.length
+          ? 'Открытых задач '+open.length+'. '+open.map(function(x){return x.t;}).join('. ')+'.'
+          : 'Все задачи закрыты. Отличная работа, Винели.';
+      }
+      if(/агент/.test(q)) return sayAgents();
+      if(/дедлайн|срок|горит|успеть/.test(q)) return sayDeadlines();
+      if(/блокер|мешает|застр|стоит|проблем/.test(q)) return sayBlockers();
+      if(/шаг|дальше|делать|план/.test(q)) return saySteps();
+      var c=findCard(q);
+      if(c) return c.name+'. Статус: '+c.status+'. '+c.sub
+        +(c.stop?' Что мешает: '+c.stop:(c.next?' Следующий шаг: '+c.next:''));
+      if(/сводка|дела|обстановк|доклад|отчет|привет|здравств/.test(q)) return brief();
+      return 'Не разобрала. Скажите: «доложи обстановку», «дедлайны», «блокеры», «задачи», «агенты», «добавь задачу…» — или назовите проект, например «что с заводом».';
+    }
+    function handle(raw,heard){
+      if(heard){jyou.hidden=false;jyou.textContent='Вы: '+raw;}else{jyou.hidden=true;}
+      var a=answer(raw);
+      jtext.textContent=a; jout.hidden=false;
+      speak(a);
+    }
+
+    /* ── кнопки-команды ── */
+    Array.prototype.forEach.call(document.querySelectorAll('.chip'),function(ch){
+      ch.addEventListener('click',function(){handle(ch.dataset.q,false);});
+    });
+
+    /* ── вопрос текстом (и диктовкой с клавиатуры) ── */
+    var qin=document.getElementById('qin');
+    function askText(){var v=qin.value.trim();if(v){handle(v,true);qin.value='';}}
+    document.getElementById('qask').addEventListener('click',askText);
+    qin.addEventListener('keydown',function(e){if(e.key==='Enter')askText();});
+
+    /* ── распознавание речи ── */
+    var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    var micBlocked=false;
+    try{micBlocked=!!(document.featurePolicy&&!document.featurePolicy.allowsFeature('microphone'));}catch(e){}
+    if(!SR||micBlocked){
+      micBtn.classList.add('off');
+      jstatus.textContent=micBlocked
+        ? 'Прямой микрофон здесь закрыт настройками рамки. Пишите вопрос в поле — или диктуйте его значком микрофона на клавиатуре: отвечу голосом.'
+        : 'Голосовой ввод в этом браузере не поддержан — откройте страницу в Chrome. Кнопки и поле вопроса отвечают голосом.';
+    }else{
+      var rec=new SR();
+      rec.lang='ru-RU'; rec.interimResults=false; rec.maxAlternatives=1;
+      rec.onresult=function(e){handle(e.results[0][0].transcript,true);};
+      var errMsgs={
+        'not-allowed':'Браузер не дал доступ к микрофону. Нажмите на замочек в адресной строке и разрешите микрофон. А пока пишите вопрос в поле — отвечу голосом.',
+        'service-not-allowed':'Браузер запретил сервис распознавания. Пишите вопрос в поле — отвечу голосом.',
+        'audio-capture':'Микрофон не найден. Проверьте, подключён ли он и не занят ли другой программой.',
+        'network':'Сервис распознавания речи не отвечает — нет связи. Попробуйте включить VPN или пишите вопрос в поле.',
+        'no-speech':'Ничего не услышала. Нажмите микрофон и говорите сразу, без паузы.',
+        'language-not-supported':'Этот браузер не распознаёт русскую речь. Пишите вопрос в поле — отвечу голосом.'
+      };
+      rec.onerror=function(e){
+        micBtn.classList.remove('listening');
+        jstatus.classList.remove('live');
+        jstatus.textContent=(errMsgs[e.error]||'Не расслышала — нажмите микрофон и попробуйте ещё раз.')+' (код: '+e.error+')';
+      };
+      rec.onend=function(){
+        micBtn.classList.remove('listening');
+        if(jstatus.textContent==='Слушаю…'){jstatus.textContent='Нажмите микрофон и спросите — отвечу голосом. Или выберите команду.';jstatus.classList.remove('live');}
+      };
+      micBtn.addEventListener('click',function(){
+        if(micBtn.classList.contains('listening')){rec.stop();return;}
+        if(canSpeak)speechSynthesis.cancel();
+        try{rec.start();}catch(err){return;}
+        micBtn.classList.add('listening');
+        jstatus.textContent='Слушаю…'; jstatus.classList.add('live');
+      });
+    }
+  })();
+</script>
