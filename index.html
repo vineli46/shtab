@@ -67,6 +67,7 @@
   /* ── Группы и карточки ── */
   section{margin-bottom:36px}
   section>h2{font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--glow);border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:16px}
+  .upd-inline{font-size:10px;color:var(--muted);letter-spacing:.05em}
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
   .card{
     position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;
@@ -179,6 +180,7 @@
         <button class="chip" data-q="следующие шаги">Следующие шаги</button>
         <button class="chip" data-q="какие задачи">Задачи</button>
         <button class="chip" data-q="какие агенты">Агенты</button>
+        <button class="chip" data-q="цифры дня">Цифры дня</button>
         <select id="vsel" class="vsel" aria-label="Выбор голоса" hidden></select>
       </div>
       <div class="task-add ask">
@@ -249,6 +251,18 @@
       <span class="left"></span>
     </div>
   </div>
+
+  <section id="livesec" hidden>
+    <h2>Добро — живые цифры <span class="upd-inline" id="liveupd"></span></h2>
+    <div class="stats">
+      <div class="stat s-blue"><b id="lv-orders">—</b><span>заказов сегодня</span></div>
+      <div class="stat s-ok"><b id="lv-delivered">—</b><span>уже доставлено</span></div>
+      <div class="stat s-warn"><b id="lv-revenue">—</b><span>выручка сегодня, ₽</span></div>
+      <div class="stat s-blue"><b id="lv-bottles">—</b><span>бутылей 19 л</span></div>
+      <div class="stat"><b id="lv-yorders">—</b><span>вчера заказов</span></div>
+      <div class="stat"><b id="lv-newc">—</b><span>новых клиентов за 7 дней</span></div>
+    </div>
+  </section>
 
   <section>
     <h2>Задачи — открытых: <span id="topen">0</span></h2>
@@ -644,6 +658,13 @@
       var done=tasks.filter(function(x){return x.d;}).map(function(x){return x.t;});
       lines.push('Открытые задачи: '+(open.join('; ')||'нет')+'.');
       if(done.length)lines.push('Выполненные задачи: '+done.join('; ')+'.');
+      if(liveStats){
+        var lt=liveStats.today,ly=liveStats.yesterday;
+        lines.push('ЖИВЫЕ ЦИФРЫ ЦРМ (обновлено '+liveStats.updated+'): сегодня заказов '+lt.orders
+          +', доставлено '+lt.delivered+', выручка '+lt.revenue+' руб., бутылей 19 л: '+lt.bottles
+          +'. Вчера: заказов '+ly.orders+', доставлено '+ly.delivered+', выручка '+ly.revenue
+          +' руб., бутылей '+ly.bottles+'. Новых клиентов за 7 дней: '+liveStats.new_clients_7d+'.');
+      }
       return lines.join('\n');
     }
     function askAI(question){
@@ -858,6 +879,34 @@
     jyesBtn.addEventListener('click',function(){var t=pendingTask;pendingTask=null;if(t)sendTask(t);});
     jnoBtn.addEventListener('click',function(){pendingTask=null;sayOut('Отменила.');});
 
+    /* ── живые цифры из ЦРМ (stats.json кладёт мак каждые полчаса) ── */
+    var liveStats=null;
+    function fmtN(n){return (n==null)?'—':String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,' ');}
+    function loadLive(){
+      fetch('stats.json?t='+(new Date()).getTime())
+      .then(function(r){if(!r.ok)throw 0;return r.json();})
+      .then(function(s){
+        liveStats=s;
+        document.getElementById('livesec').hidden=false;
+        document.getElementById('liveupd').textContent='· обновлено '+s.updated;
+        document.getElementById('lv-orders').textContent=fmtN(s.today.orders);
+        document.getElementById('lv-delivered').textContent=fmtN(s.today.delivered);
+        document.getElementById('lv-revenue').textContent=fmtN(s.today.revenue);
+        document.getElementById('lv-bottles').textContent=fmtN(s.today.bottles);
+        document.getElementById('lv-yorders').textContent=fmtN(s.yesterday&&s.yesterday.orders);
+        document.getElementById('lv-newc').textContent=fmtN(s.new_clients_7d);
+      }).catch(function(){});
+    }
+    loadLive();
+    setInterval(loadLive,5*60*1000);
+    function sayLive(){
+      if(!liveStats)return 'Живые цифры пока не загрузились — загляните через минуту.';
+      var t=liveStats.today,y=liveStats.yesterday;
+      return 'Сегодня заказов '+t.orders+', доставлено '+t.delivered+', выручка '+fmtN(t.revenue)
+        +' рублей, бутылей девятнадцать литров — '+t.bottles+'. Вчера было '+y.orders+' заказов на '
+        +fmtN(y.revenue)+' рублей. Новых клиентов за неделю: '+liveStats.new_clients_7d+'.';
+    }
+
     /* ── ответы ── */
     function brief(){
       var st=document.querySelectorAll('.stat b'),
@@ -920,6 +969,7 @@
           : 'Все задачи закрыты. Отличная работа, Винели.';
       }
       if(/агент/.test(q)) return sayAgents();
+      if(/цифр|выручк|заказов|бутыл|доставлено|продаж воды/.test(q)) return sayLive();
       if(/дедлайн|срок|горит|успеть/.test(q)) return sayDeadlines();
       if(/блокер|мешает|застр|стоит|проблем/.test(q)) return sayBlockers();
       if(/шаг|дальше|делать|план/.test(q)) return saySteps();
