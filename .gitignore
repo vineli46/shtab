@@ -1,3 +1,5 @@
 dispatcher.log
 dispatcher-err.log
 .fable.lock
+ttsenv/
+voice-server.log

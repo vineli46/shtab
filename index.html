@@ -433,47 +433,88 @@
         jyou=document.getElementById('jyou'),
         jtext=document.getElementById('jtext');
 
-    /* ── ИИ-голос Джарвиса ── */
+    /* ── Голос Джарвиса: нейроголос через мак + системный запас ── */
     var canSpeak='speechSynthesis' in window, ruVoice=null,
-        vsel=document.getElementById('vsel');
+        vsel=document.getElementById('vsel'),
+        VOICE_SRV='http://127.0.0.1:8756/',
+        EDGE_VOICES=[
+          {id:'edge:ru-RU-DmitryNeural',label:'Джарвис — Дмитрий (нейро)'},
+          {id:'edge:ru-RU-SvetlanaNeural',label:'Светлана (нейро)'}
+        ],
+        chosenVoice='edge:ru-RU-DmitryNeural',
+        curAudio=null;
+    try{chosenVoice=localStorage.getItem('shtab-voice')||chosenVoice;}catch(e){}
     function ruVoices(){
-      return speechSynthesis.getVoices().filter(function(v){return /^ru/i.test(v.lang);});
+      return canSpeak?speechSynthesis.getVoices().filter(function(v){return /^ru/i.test(v.lang);}):[];
     }
-    function pickVoice(){
-      var vs=ruVoices(), saved=null;
-      try{saved=localStorage.getItem('shtab-voice');}catch(e){}
-      ruVoice=vs.find(function(v){return v.name===saved;})
+    function fillVoices(){
+      var vs=ruVoices();
+      ruVoice=vs.find(function(v){return v.name===chosenVoice;})
         ||vs.find(function(v){return /yuri|юрий|dmitri|дмитрий|pavel|павел|male/i.test(v.name);})
         ||vs.find(function(v){return v.name==='Milena';})||vs[0]||null;
-      if(vsel){
-        vsel.innerHTML='';
-        vs.forEach(function(v){
-          var o=document.createElement('option');
-          o.value=v.name; o.textContent=v.name;
-          if(ruVoice&&v.name===ruVoice.name)o.selected=true;
-          vsel.appendChild(o);
-        });
-        vsel.hidden=vs.length<2;
-      }
+      if(!vsel)return;
+      vsel.innerHTML='';
+      EDGE_VOICES.forEach(function(ev){
+        var o=document.createElement('option');
+        o.value=ev.id; o.textContent=ev.label;
+        if(chosenVoice===ev.id)o.selected=true;
+        vsel.appendChild(o);
+      });
+      vs.forEach(function(v){
+        var o=document.createElement('option');
+        o.value=v.name; o.textContent=v.name+' (системный)';
+        if(chosenVoice===v.name)o.selected=true;
+        vsel.appendChild(o);
+      });
+      vsel.hidden=false;
     }
-    if(canSpeak){pickVoice();speechSynthesis.onvoiceschanged=pickVoice;}
+    fillVoices();
+    if(canSpeak)speechSynthesis.onvoiceschanged=fillVoices;
     if(vsel)vsel.addEventListener('change',function(){
-      var v=ruVoices().find(function(x){return x.name===vsel.value;});
-      if(v){
-        ruVoice=v;
-        try{localStorage.setItem('shtab-voice',v.name);}catch(e){}
-        speak('Так звучит этот голос, Винели.');
-      }
+      chosenVoice=vsel.value;
+      try{localStorage.setItem('shtab-voice',chosenVoice);}catch(e){}
+      fillVoices();
+      speak('Так звучит этот голос, Винели.');
     });
-    function speak(t){
-      if(!canSpeak)return;
-      speechSynthesis.cancel();
+    function statusOn(){jstatus.textContent='Говорю…';jstatus.classList.add('live');}
+    function statusOff(){jstatus.textContent='Слушаю вас в любой момент — микрофон или команда.';jstatus.classList.remove('live');}
+    function stopSpeaking(){
+      if(curAudio){try{curAudio.pause();}catch(e){} curAudio=null;}
+      if(canSpeak)speechSynthesis.cancel();
+    }
+    function sysSpeak(t){
+      if(!canSpeak){statusOff();return;}
       var u=new SpeechSynthesisUtterance(t);
       u.lang='ru-RU'; if(ruVoice)u.voice=ruVoice;
       u.pitch=.72; u.rate=1.03;
-      u.onstart=function(){jstatus.textContent='Говорю…';jstatus.classList.add('live');};
-      u.onend=function(){jstatus.textContent='Слушаю вас в любой момент — микрофон или команда.';jstatus.classList.remove('live');};
+      u.onstart=statusOn; u.onend=statusOff;
       speechSynthesis.speak(u);
+    }
+    function speak(t){
+      stopSpeaking();
+      if(chosenVoice.indexOf('edge:')!==0){sysSpeak(t);return;}
+      statusOn();
+      var ctrl=('AbortController' in window)?new AbortController():null;
+      var tm=ctrl?setTimeout(function(){ctrl.abort();},20000):null;
+      fetch(VOICE_SRV,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({text:t,voice:chosenVoice.slice(5)}),
+        signal:ctrl?ctrl.signal:undefined
+      }).then(function(r){
+        if(tm)clearTimeout(tm);
+        if(!r.ok)throw 0;
+        return r.blob();
+      }).then(function(blob){
+        var a=new Audio(URL.createObjectURL(blob));
+        curAudio=a;
+        a.onended=function(){statusOff();URL.revokeObjectURL(a.src);curAudio=null;};
+        a.onerror=function(){statusOff();};
+        a.play().catch(function(){statusOff();});
+      }).catch(function(){
+        if(tm)clearTimeout(tm);
+        sysSpeak(t);
+      });
     }
 
     /* ── данные из карточек штаба ── */
