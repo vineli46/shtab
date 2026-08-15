@@ -119,6 +119,8 @@
   .aicfg ol{padding-left:20px;display:flex;flex-direction:column;gap:4px}
   .aicfg a{color:var(--glow)}
   .ainote{color:var(--muted);font-size:12.5px}
+  .jconfirm{display:flex;gap:8px;margin-top:8px}
+  .jconfirm[hidden]{display:none}
 
   /* ── Задачи ── */
   .tasks{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
@@ -200,9 +202,32 @@
           <p class="ainote">Ключ хранится только в этом браузере, посетители страницы его не видят. Бесплатного лимита хватает на десятки вопросов в день.</p>
         </div>
       </details>
+      <details class="aicfg" id="fbcfg">
+        <summary id="fbsum">Подключить руки Фейбла</summary>
+        <div class="aibody">
+          <p>Тогда Джарвис сможет передавать задания Клоду Фейблу на вашем маке: скажите «поменяй цену помпы на сайте» — и Фейбл выполнит, а Джарвис озвучит отчёт. Настройка один раз:</p>
+          <ol>
+            <li>Откройте <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">создание токена GitHub</a> (войдите, если попросит).</li>
+            <li>Token name: напишите <b>shtab</b>. Ниже «Repository access» → «Only select repositories» → выберите <b>vineli46/shtab</b>.</li>
+            <li>Раскройте «Repository permissions» → найдите строку <b>Issues</b> → выберите «Read and write».</li>
+            <li>Внизу зелёная кнопка «Generate token» → скопируйте токен (начинается с github_pat_).</li>
+            <li>Вставьте его сюда и нажмите «Сохранить».</li>
+          </ol>
+          <div class="task-add">
+            <input id="fbkey" type="password" placeholder="github_pat_...">
+            <button id="fbsave" class="chip">Сохранить</button>
+            <button id="fbdel" class="chip" hidden>Отключить</button>
+          </div>
+          <p class="ainote">Задания выполняются, пока мак включён и не спит. Токен хранится только в этом браузере.</p>
+        </div>
+      </details>
       <div class="jout" id="jout" hidden>
         <div class="you" id="jyou" hidden></div>
         <div id="jtext"></div>
+        <div class="jconfirm" id="jconfirm" hidden>
+          <button id="jyes" class="chip">Да, передать</button>
+          <button id="jno" class="chip">Отмена</button>
+        </div>
       </div>
     </div>
   </div>
@@ -631,6 +656,95 @@
       tryModel();
     }
 
+    /* ── Руки Фейбла: задания через GitHub ── */
+    var FBKEY='shtab-ghpat', fbKey=null;
+    try{fbKey=localStorage.getItem(FBKEY);}catch(e){}
+    var fbcfg=document.getElementById('fbcfg'),
+        fbsum=document.getElementById('fbsum'),
+        fbkeyIn=document.getElementById('fbkey'),
+        fbsaveBtn=document.getElementById('fbsave'),
+        fbdelBtn=document.getElementById('fbdel'),
+        jconfirm=document.getElementById('jconfirm'),
+        jyesBtn=document.getElementById('jyes'),
+        jnoBtn=document.getElementById('jno');
+    function fbUI(){
+      if(fbKey){fbsum.textContent='Руки Фейбла: подключены'; fbdelBtn.hidden=false;}
+      else{fbsum.textContent='Подключить руки Фейбла (выполняет задания на маке)'; fbdelBtn.hidden=true;}
+    }
+    fbUI();
+    fbsaveBtn.addEventListener('click',function(){
+      var v=fbkeyIn.value.trim();
+      if(v.indexOf('github_pat_')!==0&&v.indexOf('ghp_')!==0){jstatus.textContent='Токен должен начинаться с github_pat_ — скопируйте его целиком.';return;}
+      fbKey=v; try{localStorage.setItem(FBKEY,v);}catch(e){}
+      fbkeyIn.value=''; fbcfg.open=false; fbUI();
+      sayOut('Руки Фейбла подключены. Говорите задание — например: поменяй, исправь, обнови — я передам, Фейбл выполнит.');
+    });
+    fbdelBtn.addEventListener('click',function(){
+      fbKey=null; try{localStorage.removeItem(FBKEY);}catch(e){}
+      fbUI(); jstatus.textContent='Руки Фейбла отключены.';
+    });
+    function sayOut(text){
+      jstatus.classList.remove('live');
+      jstatus.textContent='Слушаю вас — микрофон, поле вопроса или команда.';
+      jconfirm.hidden=true;
+      jtext.textContent=text; jout.hidden=false;
+      speak(text);
+    }
+    var pendingTask=null;
+    function isTaskCmd(raw){
+      var q=norm(raw);
+      if(/(^|\s)(фейбл|фэйбл|фейбол|fable)/.test(q))return true;
+      return /^(джарвис[, ]*)?(сделай|поменяй|поменять|измени|исправь|поправь|обнови|замени|убери|переделай|запусти|напиши|открой проект|задание)/.test(q);
+    }
+    function proposeTask(text){
+      pendingTask=text;
+      jtext.textContent='Передать Фейблу задание: «'+text+'»?';
+      jconfirm.hidden=false; jout.hidden=false;
+      speak('Передать Фейблу задание: '+text+'? Скажите да или нет.');
+    }
+    function sendTask(text){
+      jconfirm.hidden=true;
+      jstatus.textContent='Отправляю задание…'; jstatus.classList.add('live');
+      fetch('https://api.github.com/repos/vineli46/shtab/issues',{
+        method:'POST',
+        headers:{'Authorization':'Bearer '+fbKey,'Accept':'application/vnd.github+json','Content-Type':'application/json'},
+        body:JSON.stringify({title:text.slice(0,80),body:text,labels:['fable-task']})
+      }).then(function(r){
+        if(r.status===401||r.status===403)throw 'auth';
+        if(!r.ok)throw 'err';
+        return r.json();
+      }).then(function(iss){
+        sayOut('Передала Фейблу. Мак возьмёт задание в течение минуты; как закончит — доложу.');
+        watchIssue(iss.number);
+      }).catch(function(e){
+        sayOut(e==='auth'
+          ?'Токен не подошёл. Откройте «Руки Фейбла» и вставьте токен заново.'
+          :'Не получилось отправить задание — проверьте интернет.');
+      });
+    }
+    function watchIssue(num){
+      var tries=0;
+      var iv=setInterval(function(){
+        tries++;
+        fetch('https://api.github.com/repos/vineli46/shtab/issues/'+num+'/comments',{
+          headers:{'Authorization':'Bearer '+fbKey,'Accept':'application/vnd.github+json'}
+        }).then(function(r){return r.json();}).then(function(cs){
+          var last=(cs&&cs.length)?cs[cs.length-1]:null;
+          if(last&&last.body&&last.body.indexOf('🤖')===0){
+            clearInterval(iv);
+            sayOut('Фейбл закончил. '+last.body.replace(/^🤖\s*/,''));
+          }else if(tries===9){
+            jstatus.textContent='Фейбл ещё работает (или мак спит) — жду ответ…';
+          }else if(tries>=90){
+            clearInterval(iv);
+            sayOut('Ответа от Фейбла пока нет. Проверьте, что мак включён и не спит — как только задание выполнится, отчёт появится в списке заданий.');
+          }
+        }).catch(function(){});
+      },20000);
+    }
+    jyesBtn.addEventListener('click',function(){var t=pendingTask;pendingTask=null;if(t)sendTask(t);});
+    jnoBtn.addEventListener('click',function(){pendingTask=null;sayOut('Отменила.');});
+
     /* ── ответы ── */
     function brief(){
       var st=document.querySelectorAll('.stat b'),
@@ -704,8 +818,19 @@
     }
     function handle(raw,heard,forceQuick){
       if(heard){jyou.hidden=false;jyou.textContent='Вы: '+raw;}else{jyou.hidden=true;}
+      if(pendingTask){
+        var qq=norm(raw);
+        if(/^(да|давай|отправляй|передавай|конечно|ага)/.test(qq)){var t=pendingTask;pendingTask=null;sendTask(t);return;}
+        if(/^(нет|отмена|стоп|не надо)/.test(qq)){pendingTask=null;sayOut('Отменила.');return;}
+        pendingTask=null; jconfirm.hidden=true;
+      }
       var added=matchAdd(raw);
       if(added){jtext.textContent=added;jout.hidden=false;speak(added);return;}
+      if(!forceQuick&&isTaskCmd(raw)){
+        if(fbKey){proposeTask(raw);return;}
+        sayOut('Похоже на задание для Фейбла. Чтобы я могла их передавать, подключите «Руки Фейбла» — блок под кнопками команд.');
+        return;
+      }
       if(!forceQuick&&aiKey){askAI(raw);return;}
       var a=answer(raw);
       jtext.textContent=a; jout.hidden=false;
