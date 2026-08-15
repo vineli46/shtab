@@ -209,7 +209,7 @@
           <ol>
             <li>Откройте <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">создание токена GitHub</a> (войдите, если попросит).</li>
             <li>Token name: напишите <b>shtab</b>. Ниже «Repository access» → «Only select repositories» → выберите <b>vineli46/shtab</b>.</li>
-            <li>Раскройте «Repository permissions» → найдите строку <b>Issues</b> → выберите «Read and write».</li>
+            <li>Раскройте «Repository permissions» → найдите строку <b>Issues</b> → выберите «Read and write». Тут же найдите строку <b>Contents</b> → тоже «Read and write» (это для общего списка задач).</li>
             <li>Внизу зелёная кнопка «Generate token» → скопируйте токен (начинается с github_pat_).</li>
             <li>Вставьте его сюда и нажмите «Сохранить».</li>
           </ol>
@@ -218,7 +218,7 @@
             <button id="fbsave" class="chip">Сохранить</button>
             <button id="fbdel" class="chip" hidden>Отключить</button>
           </div>
-          <p class="ainote">Задания выполняются, пока мак включён и не спит. Токен хранится только в этом браузере.</p>
+          <p class="ainote">Задания выполняются, пока мак включён и не спит. Токен хранится только в этом браузере. Этот же токен делает список задач общим на всех ваших устройствах — и Фейбл видит его в работе.</p>
         </div>
       </details>
       <div class="jout" id="jout" hidden>
@@ -397,7 +397,7 @@
 
   <footer>
     <div class="upd">Карточки пересобраны: 16.08.2026</div>
-    <p>Дата и счётчики дней до дедлайнов пересчитываются сами при каждом открытии страницы. Карточки проектов Claude обновляет автоматически после каждой работы, где что-то изменилось; в любой момент можно сказать «обнови штаб». Задачи хранятся в браузере этого устройства — редактируйте их прямо на странице.</p>
+    <p>Дата и счётчики дней до дедлайнов пересчитываются сами при каждом открытии страницы. Карточки проектов Claude обновляет автоматически после каждой работы, где что-то изменилось; в любой момент можно сказать «обнови штаб». Задачи можно редактировать прямо на странице; при подключённых «руках Фейбла» список общий на всех устройствах.</p>
   </footer>
 
 </div>
@@ -515,7 +515,10 @@
       return seedTasks.map(function(x){return {t:x.t,d:x.d};});
     }
     var tasks=loadTasks();
-    function saveTasks(){try{localStorage.setItem(TKEY,JSON.stringify(tasks));}catch(e){}}
+    function saveTasks(){
+      try{localStorage.setItem(TKEY,JSON.stringify(tasks));}catch(e){}
+      scheduleSync();
+    }
     function renderTasks(){
       tlist.innerHTML='';
       tasks.forEach(function(task,i){
@@ -672,12 +675,74 @@
       else{fbsum.textContent='Подключить руки Фейбла (выполняет задания на маке)'; fbdelBtn.hidden=true;}
     }
     fbUI();
+
+    /* ── общий список задач: tasks.json в репо штаба ── */
+    var TASKS_URL='https://api.github.com/repos/vineli46/shtab/contents/tasks.json';
+    var remoteSha=null, syncTimer=null;
+    function b64e(s){
+      var b=new TextEncoder().encode(s),r='';
+      for(var i=0;i<b.length;i++)r+=String.fromCharCode(b[i]);
+      return btoa(r);
+    }
+    function b64d(s){
+      var raw=atob(s.replace(/\s/g,'')),b=new Uint8Array(raw.length);
+      for(var i=0;i<raw.length;i++)b[i]=raw.charCodeAt(i);
+      return new TextDecoder().decode(b);
+    }
+    function ghHeaders(){
+      return {'Authorization':'Bearer '+fbKey,'Accept':'application/vnd.github+json','Content-Type':'application/json'};
+    }
+    function pullTasks(){
+      if(!fbKey)return;
+      fetch(TASKS_URL,{headers:ghHeaders()}).then(function(r){
+        if(r.status===404){remoteSha=null;pushTasks();return null;}
+        if(!r.ok)return null;
+        return r.json();
+      }).then(function(d){
+        if(!d)return;
+        remoteSha=d.sha;
+        try{
+          var arr=JSON.parse(b64d(d.content));
+          if(Object.prototype.toString.call(arr)==='[object Array]'){
+            tasks=arr;
+            try{localStorage.setItem(TKEY,JSON.stringify(tasks));}catch(e){}
+            renderTasks();
+          }
+        }catch(e){}
+      }).catch(function(){});
+    }
+    function pushTasks(){
+      if(!fbKey)return;
+      var body={message:'Задачи со штаба',content:b64e(JSON.stringify(tasks,null,1))};
+      if(remoteSha)body.sha=remoteSha;
+      fetch(TASKS_URL,{method:'PUT',headers:ghHeaders(),body:JSON.stringify(body)})
+      .then(function(r){
+        if(r.status===409||r.status===422){
+          fetch(TASKS_URL,{headers:ghHeaders()}).then(function(rr){return rr.ok?rr.json():null;}).then(function(d){
+            if(d){remoteSha=d.sha;pushTasks();}
+          });
+          return null;
+        }
+        if(!r.ok)return null;
+        return r.json();
+      }).then(function(d){if(d&&d.content)remoteSha=d.content.sha;})
+      .catch(function(){});
+    }
+    function scheduleSync(){
+      if(!fbKey)return;
+      if(syncTimer)clearTimeout(syncTimer);
+      syncTimer=setTimeout(pushTasks,1500);
+    }
+    pullTasks();
+    document.addEventListener('visibilitychange',function(){
+      if(document.visibilityState==='visible')pullTasks();
+    });
     fbsaveBtn.addEventListener('click',function(){
       var v=fbkeyIn.value.trim();
       if(v.indexOf('github_pat_')!==0&&v.indexOf('ghp_')!==0){jstatus.textContent='Токен должен начинаться с github_pat_ — скопируйте его целиком.';return;}
       fbKey=v; try{localStorage.setItem(FBKEY,v);}catch(e){}
-      fbkeyIn.value=''; fbcfg.open=false; fbUI();
-      sayOut('Руки Фейбла подключены. Говорите задание — например: поменяй, исправь, обнови — я передам, Фейбл выполнит.');
+      fbkeyIn.value=''; fbcfg.open=false; fbUI(); pullTasks();
+      sayOut('Руки Фейбла подключены, задачи теперь общие на всех устройствах. Говорите задание — например: поменяй, исправь, обнови — я передам, Фейбл выполнит.');
     });
     fbdelBtn.addEventListener('click',function(){
       fbKey=null; try{localStorage.removeItem(FBKEY);}catch(e){}
