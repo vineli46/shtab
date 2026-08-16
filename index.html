@@ -202,6 +202,17 @@
             <button id="aidel" class="chip" hidden>Отключить</button>
           </div>
           <p class="ainote">Ключ хранится только в этом браузере, посетители страницы его не видят. Бесплатного лимита хватает на десятки вопросов в день.</p>
+          <p><b>Умный и быстрый мозг Сбера</b> — для мака, бесплатно 1 млн токенов в месяц (это сотни разговоров), сайт на русском:</p>
+          <ol>
+            <li>Откройте <a href="https://developers.sber.ru/gigachat" target="_blank" rel="noopener">developers.sber.ru/gigachat</a> → «Попробовать GigaChat API» → войдите через Сбер ID.</li>
+            <li>В личном кабинете создайте проект <b>GigaChat API</b> и скопируйте <b>Authorization Key</b> (длинная строка-ключ).</li>
+            <li>Вставьте ключ сюда (сидя за маком) и нажмите «Сохранить» — он сохранится на маке, не в браузере.</li>
+          </ol>
+          <div class="task-add">
+            <input id="sbkey" type="password" placeholder="Authorization Key из кабинета Сбера…">
+            <button id="sbsave" class="chip">Сохранить</button>
+          </div>
+          <p class="ainote" id="sbstatus"></p>
         </div>
       </details>
       <details class="aicfg" id="fbcfg">
@@ -667,16 +678,54 @@
       }
       return lines.join('\n');
     }
+    var sbOk=false;
+    fetch('http://127.0.0.1:8756/ai/ping').then(function(r){return r.json();})
+      .then(function(d){sbOk=!!d.key;var el=document.getElementById('sbstatus');if(el)el.textContent=sbOk?'Мозг Сбера: подключён и работает.':'';})
+      .catch(function(){});
+    document.getElementById('sbsave').addEventListener('click',function(){
+      var v=document.getElementById('sbkey').value.trim();
+      if(v.length<20){jstatus.textContent='Скопируйте ключ Сбера целиком.';return;}
+      fetch('http://127.0.0.1:8756/setkey',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:v})})
+      .then(function(r){
+        if(r.status===401)throw 'bad';
+        if(!r.ok)throw 'err';
+        sbOk=true;
+        document.getElementById('sbkey').value='';
+        document.getElementById('sbstatus').textContent='Мозг Сбера: подключён и работает.';
+        document.getElementById('aicfg').open=false;
+        sayOut('Мозг Сбера подключён. Теперь я думаю быстрее и умнее.');
+      }).catch(function(e){
+        document.getElementById('sbstatus').textContent=(e==='bad')
+          ?'Ключ не подошёл — проверьте, что скопировали Authorization Key целиком.'
+          :'Не получилось сохранить: делайте это за маком, при включённом штаб-сервере.';
+      });
+    });
     function askAI(question){
       jstatus.textContent='Думаю…'; jstatus.classList.add('live');
       var sys='Ты — Джарвис, голосовой ИИ-помощник Винели, владелицы службы доставки воды «Добро» в Курске. Отвечай СРАЗУ, без долгих размышлений, только по-русски, коротко — одним-тремя предложениями, тёплым деловым тоном, на «вы». Ответ озвучивается вслух: без списков, без markdown, без эмодзи и без английских слов. Опирайся на данные штаба ниже; если вопрос не о них — отвечай из общих знаний, честно и по делу.\n\nДАННЫЕ ШТАБА:\n'+shtabContext();
+      var ctrl0=('AbortController' in window)?new AbortController():null;
+      var tm0=ctrl0?setTimeout(function(){ctrl0.abort();},45000):null;
+      fetch('http://127.0.0.1:8756/ai',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({system:sys,question:question}),
+        signal:ctrl0?ctrl0.signal:undefined
+      }).then(function(r){
+        if(tm0)clearTimeout(tm0);
+        if(!r.ok)throw 0;
+        return r.json();
+      }).then(function(d){
+        if(d&&d.answer)sayOut(d.answer.replace(/[*#`]/g,'').trim());
+        else throw 0;
+      }).catch(function(){
+        if(tm0)clearTimeout(tm0);
+        if(aiKey)openRouterAsk(sys,question);
+        else sayOut('ИИ сейчас недоступен. За маком подключите мозг Сбера в блоке «ИИ-мозг» — или добавьте ключ OpenRouter.');
+      });
+    }
+    function openRouterAsk(sys,question){
       var mi=0;
-      function fin(text){
-        jstatus.classList.remove('live');
-        jstatus.textContent='Слушаю вас — микрофон, поле вопроса или команда.';
-        jtext.textContent=text; jout.hidden=false;
-        speak(text);
-      }
+      function fin(text){sayOut(text);}
       function tryModel(){
         if(mi>=AI_MODELS.length){
           fin('Все бесплатные ИИ-модели сейчас заняты. Подождите минуту и спросите снова — или пользуйтесь быстрыми командами.');
@@ -995,7 +1044,7 @@
         sayOut('Похоже на задание для Фейбла. Чтобы я могла их передавать, подключите «Руки Фейбла» — блок под кнопками команд.');
         return;
       }
-      if(!forceQuick&&aiKey){
+      if(!forceQuick&&(aiKey||sbOk)){
         var qwords=norm(raw).split(/[^a-zа-я0-9]+/).filter(Boolean);
         if(qwords.length<=6){
           var quick=answer(raw,true);
