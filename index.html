@@ -650,8 +650,8 @@
       aiUI(); jstatus.textContent='ИИ-мозг отключён — работают быстрые команды.';
     });
     var AI_MODELS=[
-      'anthropic/claude-fable-5',
       'anthropic/claude-sonnet-5',
+      'anthropic/claude-fable-5',
       'google/gemini-3.7-flash',
       'deepseek/deepseek-v4-flash',
       'google/gemma-4-31b-it:free',
@@ -889,8 +889,9 @@
       return /^(джарвис[, ]*)?(сделай|поменяй|поменять|измени|исправь|поправь|обнови|замени|убери|переделай|запусти|напиши|открой проект|задание)/.test(q);
     }
     function askFable(question){
-      jstatus.textContent='Передала Фейблу — он подумает и ответит, это займёт до минуты…';
+      jstatus.textContent='Передала Фейблу — сейчас ответит…';
       jstatus.classList.add('live');
+      speak('Секунду.');
       var ctrl=('AbortController' in window)?new AbortController():null;
       var tm=ctrl?setTimeout(function(){ctrl.abort();},150000):null;
       fetch('http://127.0.0.1:8756/fable',{
