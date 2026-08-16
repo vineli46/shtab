@@ -881,10 +881,38 @@
       speak(text);
     }
     var pendingTask=null;
+    function isFableCall(raw){
+      return /(^|\s)(фейбл|фэйбл|фейбол|фебл|fable)/.test(norm(raw));
+    }
     function isTaskCmd(raw){
       var q=norm(raw);
-      if(/(^|\s)(фейбл|фэйбл|фейбол|fable)/.test(q))return true;
       return /^(джарвис[, ]*)?(сделай|поменяй|поменять|измени|исправь|поправь|обнови|замени|убери|переделай|запусти|напиши|открой проект|задание)/.test(q);
+    }
+    function askFable(question){
+      jstatus.textContent='Передала Фейблу — он подумает и ответит, это займёт до минуты…';
+      jstatus.classList.add('live');
+      var ctrl=('AbortController' in window)?new AbortController():null;
+      var tm=ctrl?setTimeout(function(){ctrl.abort();},150000):null;
+      fetch('http://127.0.0.1:8756/fable',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({question:question}),
+        signal:ctrl?ctrl.signal:undefined
+      }).then(function(r){
+        if(tm)clearTimeout(tm);
+        if(!r.ok)throw 0;
+        return r.json();
+      }).then(function(d){
+        if(d&&d.answer)sayOut(d.answer);
+        else throw 0;
+      }).catch(function(){
+        if(tm)clearTimeout(tm);
+        if(fbKey){
+          sendTask(question);
+        }else{
+          sayOut('Не дозвалась Фейбла: мак недоступен, а «Руки Фейбла» для дальней связи не подключены.');
+        }
+      });
     }
     function proposeTask(text){
       pendingTask=text;
@@ -1046,6 +1074,7 @@
       }
       var added=matchAdd(raw);
       if(added){jtext.textContent=added;jout.hidden=false;speak(added);return;}
+      if(!forceQuick&&isFableCall(raw)){askFable(raw);return;}
       if(!forceQuick&&isTaskCmd(raw)){
         if(fbKey){proposeTask(raw);return;}
         sayOut('Похоже на задание для Фейбла. Чтобы я могла их передавать, подключите «Руки Фейбла» — блок под кнопками команд.');
