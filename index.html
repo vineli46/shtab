@@ -650,11 +650,13 @@
       aiUI(); jstatus.textContent='ИИ-мозг отключён — работают быстрые команды.';
     });
     var AI_MODELS=[
+      'google/gemini-3.7-flash',
+      'google/gemini-3.5-flash',
+      'deepseek/deepseek-v4-flash',
       'google/gemma-4-31b-it:free',
       'google/gemma-4-26b-a4b-it:free',
       'nvidia/nemotron-3-super-120b-a12b:free',
-      'openai/gpt-oss-20b:free',
-      'nvidia/nemotron-3-ultra-550b-a55b:free'
+      'openai/gpt-oss-20b:free'
     ];
     function shtabContext(){
       var st=document.querySelectorAll('.stat b'), lines=[];
@@ -703,32 +705,36 @@
     function askAI(question){
       jstatus.textContent='Думаю…'; jstatus.classList.add('live');
       var sys='Ты — Джарвис, голосовой ИИ-помощник Винели, владелицы службы доставки воды «Добро» в Курске. Отвечай СРАЗУ, без долгих размышлений, только по-русски, коротко — одним-тремя предложениями, тёплым деловым тоном, на «вы». Ответ озвучивается вслух: без списков, без markdown, без эмодзи и без английских слов. Опирайся на данные штаба ниже; если вопрос не о них — отвечай из общих знаний, честно и по делу.\n\nДАННЫЕ ШТАБА:\n'+shtabContext();
-      var ctrl0=('AbortController' in window)?new AbortController():null;
-      var tm0=ctrl0?setTimeout(function(){ctrl0.abort();},45000):null;
-      fetch('http://127.0.0.1:8756/ai',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({system:sys,question:question}),
-        signal:ctrl0?ctrl0.signal:undefined
-      }).then(function(r){
-        if(tm0)clearTimeout(tm0);
-        if(!r.ok)throw 0;
-        return r.json();
-      }).then(function(d){
-        if(d&&d.answer)sayOut(d.answer.replace(/[*#`]/g,'').trim());
-        else throw 0;
-      }).catch(function(){
-        if(tm0)clearTimeout(tm0);
-        if(aiKey)openRouterAsk(sys,question);
-        else sayOut('ИИ сейчас недоступен. За маком подключите мозг Сбера в блоке «ИИ-мозг» — или добавьте ключ OpenRouter.');
-      });
+      function trySber(failMsg){
+        var ctrl0=('AbortController' in window)?new AbortController():null;
+        var tm0=ctrl0?setTimeout(function(){ctrl0.abort();},45000):null;
+        fetch('http://127.0.0.1:8756/ai',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({system:sys,question:question}),
+          signal:ctrl0?ctrl0.signal:undefined
+        }).then(function(r){
+          if(tm0)clearTimeout(tm0);
+          if(!r.ok)throw 0;
+          return r.json();
+        }).then(function(d){
+          if(d&&d.answer)sayOut(d.answer.replace(/[*#`]/g,'').trim());
+          else throw 0;
+        }).catch(function(){
+          if(tm0)clearTimeout(tm0);
+          sayOut(failMsg||'ИИ сейчас недоступен. За маком подключите мозг Сбера в блоке «ИИ-мозг» — или добавьте ключ OpenRouter.');
+        });
+      }
+      if(aiKey)openRouterAsk(sys,question,function(){trySber('ИИ сейчас недоступен — попробуйте через минуту или пользуйтесь быстрыми командами.');});
+      else trySber();
     }
-    function openRouterAsk(sys,question){
+    function openRouterAsk(sys,question,onFail){
       var mi=0;
       function fin(text){sayOut(text);}
       function tryModel(){
         if(mi>=AI_MODELS.length){
-          fin('Все бесплатные ИИ-модели сейчас заняты. Подождите минуту и спросите снова — или пользуйтесь быстрыми командами.');
+          if(onFail){onFail();return;}
+          fin('Все ИИ-модели сейчас заняты. Подождите минуту и спросите снова — или пользуйтесь быстрыми командами.');
           return;
         }
         var ctrl=('AbortController' in window)?new AbortController():null;
