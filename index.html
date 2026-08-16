@@ -639,11 +639,11 @@
       aiUI(); jstatus.textContent='ИИ-мозг отключён — работают быстрые команды.';
     });
     var AI_MODELS=[
-      'nvidia/nemotron-3-ultra-550b-a55b:free',
-      'nvidia/nemotron-3-super-120b-a12b:free',
       'google/gemma-4-31b-it:free',
       'google/gemma-4-26b-a4b-it:free',
-      'openai/gpt-oss-20b:free'
+      'nvidia/nemotron-3-super-120b-a12b:free',
+      'openai/gpt-oss-20b:free',
+      'nvidia/nemotron-3-ultra-550b-a55b:free'
     ];
     function shtabContext(){
       var st=document.querySelectorAll('.stat b'), lines=[];
@@ -669,7 +669,7 @@
     }
     function askAI(question){
       jstatus.textContent='Думаю…'; jstatus.classList.add('live');
-      var sys='Ты — Джарвис, голосовой ИИ-помощник Винели, владелицы службы доставки воды «Добро» в Курске. Отвечай только по-русски, коротко — одним-четырьмя предложениями, тёплым деловым тоном, на «вы». Ответ озвучивается вслух: без списков, без markdown, без эмодзи и без английских слов. Опирайся на данные штаба ниже; если вопрос не о них — отвечай из общих знаний, честно и по делу.\n\nДАННЫЕ ШТАБА:\n'+shtabContext();
+      var sys='Ты — Джарвис, голосовой ИИ-помощник Винели, владелицы службы доставки воды «Добро» в Курске. Отвечай СРАЗУ, без долгих размышлений, только по-русски, коротко — одним-тремя предложениями, тёплым деловым тоном, на «вы». Ответ озвучивается вслух: без списков, без markdown, без эмодзи и без английских слов. Опирайся на данные штаба ниже; если вопрос не о них — отвечай из общих знаний, честно и по делу.\n\nДАННЫЕ ШТАБА:\n'+shtabContext();
       var mi=0;
       function fin(text){
         jstatus.classList.remove('live');
@@ -695,7 +695,7 @@
           body:JSON.stringify({
             model:AI_MODELS[mi],
             messages:[{role:'system',content:sys},{role:'user',content:question}],
-            max_tokens:400, temperature:0.5
+            max_tokens:220, temperature:0.5
           }),
           signal:ctrl?ctrl.signal:undefined
         }).then(function(r){
@@ -957,7 +957,7 @@
       if(m){addTask(m[1]);return 'Записала задачу: '+m[1]+'.';}
       return null;
     }
-    function answer(raw){
+    function answer(raw,strict){
       var q=norm(raw).replace(/джарвис/g,' ').trim();
       alias.forEach(function(a){q=q.replace(a[0],a[1]);});
       var added=matchAdd(raw);
@@ -977,6 +977,7 @@
       if(c) return c.name+'. Статус: '+c.status+'. '+c.sub
         +(c.stop?' Что мешает: '+c.stop:(c.next?' Следующий шаг: '+c.next:''));
       if(/сводка|дела|обстановк|доклад|отчет|привет|здравств|новост|нового|доброе|утро|происходит|расскажи/.test(q)) return brief();
+      if(strict)return null;
       return 'Не разобрала. Скажите: «доложи обстановку», «дедлайны», «блокеры», «задачи», «агенты», «добавь задачу…» — или назовите проект, например «что с заводом».';
     }
     function handle(raw,heard,forceQuick){
@@ -994,7 +995,14 @@
         sayOut('Похоже на задание для Фейбла. Чтобы я могла их передавать, подключите «Руки Фейбла» — блок под кнопками команд.');
         return;
       }
-      if(!forceQuick&&aiKey){askAI(raw);return;}
+      if(!forceQuick&&aiKey){
+        var qwords=norm(raw).split(/[^a-zа-я0-9]+/).filter(Boolean);
+        if(qwords.length<=6){
+          var quick=answer(raw,true);
+          if(quick){jtext.textContent=quick;jout.hidden=false;speak(quick);return;}
+        }
+        askAI(raw);return;
+      }
       var a=answer(raw);
       jtext.textContent=a; jout.hidden=false;
       speak(a);
