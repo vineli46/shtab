@@ -144,6 +144,37 @@
   .tbtn.tdel:hover{color:var(--bad)}
   .tbtn:focus-visible{outline:2px solid var(--glow);outline-offset:2px;border-radius:4px}
 
+  /* ── Раздел «Проекты»: картотека ── */
+  .pgroup{margin-bottom:22px}
+  .pgroup h3{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+  .plist{display:flex;flex-direction:column;gap:8px}
+  .proj{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .proj[data-s="ok"]{border-left:3px solid var(--ok)}
+  .proj[data-s="warn"]{border-left:3px solid var(--warn)}
+  .proj[data-s="bad"]{border-left:3px solid var(--bad)}
+  .proj[data-s="idea"]{border-left:3px solid var(--glow)}
+  .proj summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:12px 16px 12px 18px;flex-wrap:wrap}
+  .proj summary::-webkit-details-marker{display:none}
+  .proj summary::before{content:"▸";color:var(--glow);font-family:var(--mono);flex:none}
+  .proj[open] summary::before{content:"▾"}
+  .proj summary:focus-visible{outline:2px solid var(--glow);outline-offset:-2px}
+  .proj .pname{font-weight:650;font-size:15.5px}
+  .proj .pshort{color:var(--muted);font-size:13px;flex:1;min-width:200px}
+  .proj .ptag{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;border-radius:99px;padding:2px 9px;border:1px solid var(--line-strong);color:var(--muted);flex:none}
+  .proj[data-s="ok"] .ptag{color:var(--ok);border-color:var(--ok)}
+  .proj[data-s="warn"] .ptag{color:var(--warn);border-color:var(--warn)}
+  .proj[data-s="bad"] .ptag{color:var(--bad);border-color:var(--bad)}
+  .proj[data-s="idea"] .ptag{color:var(--glow);border-color:var(--glow)}
+  .pbody{padding:2px 18px 16px 34px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px 22px;font-size:13.5px}
+  .pbody dl{margin:0}
+  .pbody dt{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--glow);margin:6px 0 2px;font-weight:600}
+  .pbody dt:first-child{margin-top:0}
+  .pbody dd{margin:0;color:var(--text);line-height:1.5}
+  .pbody dd.dim{color:var(--muted)}
+  .pbody a{color:var(--glow)}
+  .pbody code{font-family:var(--mono);font-size:12px;background:var(--panel-2);border:1px solid var(--line);border-radius:5px;padding:1px 6px}
+  .pfull{grid-column:1/-1}
+
   footer{border-top:1px solid var(--line);padding-top:18px;color:var(--muted);font-size:13px}
   footer .upd{font-family:var(--mono);font-size:12px;color:var(--glow);margin-bottom:4px}
 </style>
@@ -182,6 +213,7 @@
         <button class="chip" data-q="какие задачи">Задачи</button>
         <button class="chip" data-q="какие агенты">Агенты</button>
         <button class="chip" data-q="цифры дня">Цифры дня</button>
+        <button class="chip" data-q="список проектов">Проекты</button>
         <select id="vsel" class="vsel" aria-label="Выбор голоса" hidden></select>
       </div>
       <div class="task-add ask">
@@ -392,6 +424,306 @@
         <p class="sub">Библиотека из 130 навыков выложена на GitHub, чтобы облачные агенты умели то же, что и Claude на маке.</p>
         <p class="next"><b>Следующий шаг</b>Подключить GitHub к claude.ai/code и указать репозиторий агентам.</p>
       </article>
+    </div>
+  </section>
+
+  <section id="projects">
+    <h2>Проекты — картотека: что построено, где живёт, как настроено</h2>
+
+    <div class="pgroup">
+      <h3>Штаб и Джарвис</h3>
+      <div class="plist">
+
+        <details class="proj" data-s="ok">
+          <summary><span class="pname">Штаб (эта страница)</span><span class="pshort">Джарвис-дашборд всех проектов с голосом</span><span class="ptag">Работает</span></summary>
+          <div class="pbody">
+            <dl>
+              <dt>Что это</dt><dd>Один экран со всеми проектами, дедлайнами, задачами и живыми цифрами бизнеса; управляется голосом.</dd>
+              <dt>Где живёт</dt><dd>Главная: <a href="https://vineli46.github.io/shtab/">vineli46.github.io/shtab</a> (там работает микрофон). Копия на claude.ai (микрофон закрыт рамкой).</dd>
+              <dt>Исходник</dt><dd>Папка на маке <code>~/штаб/index.html</code>, хранилище GitHub <code>vineli46/shtab</code>. Публикация: сохранил → отправил в хранилище → страница обновилась за минуту.</dd>
+            </dl>
+            <dl>
+              <dt>Как обновляется</dt><dd>Фейбл пересобирает карточки после каждой работы, где что-то изменилось (правило «Хранитель штаба»); дата и «осталось N дней» считаются сами при открытии; цифры ЦРМ — каждые полчаса. Команда: «обнови штаб».</dd>
+              <dt>Кто видит</dt><dd>Любой, у кого есть ссылка (публичная страница). Паролей внутри нет; ключи хранятся только в вашем браузере.</dd>
+            </dl>
+          </div>
+        </details>
+
+        <details class="proj" data-s="ok">
+          <summary><span class="pname">Голос и мозг Джарвиса</span><span class="pshort">микрофон → ответ нейроголосом; ИИ для сложных вопросов</span><span class="ptag">Работает</span></summary>
+          <div class="pbody">
+            <dl>
+              <dt>Слух</dt><dd>Распознавание речи браузера (Chrome, русский). Запасной путь — поле вопроса и диктовка с клавиатуры.</dd>
+              <dt>Голос</dt><dd>Нейроголос «Дмитрий» (сервис Read Aloud Майкрософта, бесплатно) через голосовой сервер на маке; без мака — системный голос. Переключатель голосов рядом с командами.</dd>
+              <dt>Быстрые ответы</dt><dd>«Доложи обстановку», «дедлайны», «блокеры», «задачи», «агенты», «цифры дня», «что с [проектом]» — мгновенно, без ИИ.</dd>
+            </dl>
+            <dl>
+              <dt>ИИ-мозг</dt><dd>Сложные вопросы → OpenRouter (первая модель Claude Sonnet 5, затем Fable 5, Gemini; бесплатные запасные) — нужен ключ sk-or- в блоке «ИИ-мозг» + пополнение $10 картой. Запасной мозг Сбера (GigaChat Max, ключ вводится за маком).</dd>
+              <dt>Прямая линия</dt><dd>Фраза с обращением «Фейбл, …» идёт лично Фейблу на маке (5–12 с; «Фейбл, подумай…» — полная модель, ~1 мин).</dd>
+              <dt>Настройки на маке</dt><dd>Сервер <code>~/штаб/jarvis-voice-server.py</code>, служба <code>com.shtab.voice</code>, порт 8756. Chrome разрешено ходить к нему политикой.</dd>
+            </dl>
+          </div>
+        </details>
+
+        <details class="proj" data-s="ok">
+          <summary><span class="pname">Руки Фейбла</span><span class="pshort">голосовые задания выполняет Claude на маке</span><span class="ptag">Работает</span></summary>
+          <div class="pbody">
+            <dl>
+              <dt>Как работает</dt><dd>Команда «сделай/поменяй/исправь…» → Джарвис переспрашивает «да/нет» → задание уходит в хранилище штаба → диспетчер на маке (проверяет каждую минуту) запускает Фейбла → отчёт озвучивается.</dd>
+              <dt>Настройки</dt><dd>Диспетчер <code>~/штаб/fable-dispatcher.sh</code>, служба <code>com.shtab.fable</code>; задания принимаются только от аккаунта vineli46. Токен GitHub — в блоке «Руки Фейбла» (на маке подключён).</dd>
+            </dl>
+            <dl>
+              <dt>Общие задачи</dt><dd>Список задач синхронизируется между устройствами через <code>tasks.json</code> в хранилище; Фейбл его видит. Голосом: «добавь задачу…», «напомни…», «какие задачи».</dd>
+              <dt>Условие</dt><dd>Мак включён и не спит. С телефона задание дождётся пробуждения мака.</dd>
+            </dl>
+          </div>
+        </details>
+
+        <details class="proj" data-s="ok">
+          <summary><span class="pname">Живые цифры из ЦРМ</span><span class="pshort">заказы, выручка, бутыли — каждые полчаса</span><span class="ptag">Работает</span></summary>
+          <div class="pbody">
+            <dl>
+              <dt>Что показывает</dt><dd>Заказы и доставки за сегодня, выручка, бутыли 19 л, вчерашние заказы, новые клиенты за 7 дней. Джарвис читает вслух: «цифры дня».</dd>
+              <dt>Откуда</dt><dd>ЦРМ WaterApp напрямую (без Claude и токенов), сборщик <code>~/штаб/shtab-stats.py</code>, служба <code>com.shtab.stats</code> каждые 30 мин → файл <code>stats.json</code> в хранилище.</dd>
+            </dl>
+            <dl>
+              <dt>Внимание</dt><dd>Выручка видна на публичной странице — по слову «убери выручку из штаба» останутся только заказы и бутыли.</dd>
+            </dl>
+          </div>
+        </details>
+
+      </div>
+    </div>
+
+    <div class="pgroup">
+      <h3>Вода «Добро» — сайт, приложение, бот</h3>
+      <div class="plist">
+
+        <details class="proj" data-s="ok">
+          <summary><span class="pname">Сайт dobro (доставка воды)</span><span class="pshort">главная, каталог, акции, разделы</span><span class="ptag">Работает</span></summary>
+          <div class="pbody">
+            <dl>
+              <dt>Что сделано</dt><dd>Шапка с −83% на помпу (крутящиеся бутыли + помпа); каталог в 2 колонки; блок акций «2 бутыли по штучной цене» (3 акции по 2 шт: 150/150/0 ₽); блок «Мы позаботились» — жёлтый #F1C232 с автоволной карточек; слайдер 3 баннеров; блок «Полезная вода» с автовидео; ЧаВо внизу «О воде»; 5 разделов в стиле «белый + лайм #D9F103».</dd>
+              <dt>Скорость</dt><dd>Главная ужата 13,8 → 5,7 МБ (видео сжато, баннеры WebP).</dd>
+            </dl>
+            <dl>
+              <dt>Где исходники</dt><dd>Папка <code>~/Desktop/dobro-sayt/</code>: слепок сайта в «Сайт Добро/база», скрипты деплоя (deploy_catalog_layout.py → всегда затем fix_main_margins.py; deploy_akcii_block.py; recolor_advantages_block.py; build_reviews.py). Меню — свой header у всех страниц (новый пункт = обновить все).</dd>
+              <dt>Правила</dt><dd>Бутыль всегда фирменная (фирменная-бутыль-19л.jpg); фото/баннеры — сначала на одобрение в чате; перед update_article всегда свежий get_article.</dd>
+              <dt>Закрыто</dt><dd class="dim">Акция −50% на первый заказ (09.08), медведь и летающая бутыль на главной (05.08).</dd>
+            </dl>
+          </div>
+        </details>
+
+        <details class="proj" data-s="ok">
+          <summary><span class="pname">Мобильное приложение «Добро»</span><span class="pshort">дизайн серый + жёлтый, акционные слайды</span><span class="ptag">Работает</span></summary>
+          <div class="pbody">
+            <dl>
+              <dt>Что сделано</dt><dd>Гамма как у шапки сайта: кнопки #F1C232 с текстом #171717, вторичные #616870, таббар #171717; 4 акционных баннера 800×500 с переходом на товар.</dd>
+              <dt>Где настраивается</dt><dd>Кабинет ЦРМ: цвета в <code>/cab/settings/new_mobile</code> (сохранять только через scope.save(false) — кнопка с confirm не срабатывает), слайды в <code>/cab/mobile_slides</code>. Бэкап исходных цветов — в папке «Сайт Добро».</dd>
+            </dl>
+          </div>
+        </details>
+
+        <details class="proj" data-s="ok">
+          <summary><span class="pname">Бот «Добро» в Telegram</span><span class="pshort">сводки, отзывы, маркетплейсы — 24/7 на сервере</span><span class="ptag">Работает</span></summary>
+          <div class="pbody">
+            <dl>
+              <dt>Что умеет</dt><dd>Кнопки «Аналитика Добро» (сегодня/вчера/месяц), «Отзывы» (Озон + карты: Яндекс/Google/2ГИС) с черновиками ответов по одобрению, раздел «Озон и Валберис»; умные вопросы через Claude с доступом к ЦРМ и веб-поиску; помнит ~8 обменов.</dd>
+              <dt>Расписания</dt><dd>Сводка воды в 9:00 и сводка маркетплейсов в 9:02 (МСК). Отвечает только вам (chat 1735631635); чужие попытки — уведомление.</dd>
+            </dl>
+            <dl>
+              <dt>Где живёт</dt><dd>Сервер DigitalOcean Frankfurt 165.245.252.163: <code>/opt/dobro/bot.py</code>, ключи в <code>/opt/dobro/dobro.env</code>, службы dobro-bot, dobro-svodka.timer, dobro-marketplaces.timer. Вход по SSH-ключу с мака.</dd>
+              <dt>Стоимость</dt><dd>~5 $/мес сервер + оплата Anthropic за умные ответы (3–6 ₽/вопрос); быстрые сводки бесплатны.</dd>
+              <dt>Внимание</dt><dd class="dim">Бота может слушать только один процесс — старую копию на маке не включать (com.dobro.bot.plist.disabled).</dd>
+            </dl>
+          </div>
+        </details>
+
+        <details class="proj" data-s="warn">
+          <summary><span class="pname">Возврат клиентов</span><span class="pshort">41% заказали один раз, 1613 спящих</span><span class="ptag">Решить</span></summary>
+          <div class="pbody">
+            <dl>
+              <dt>Диагноз (15.08)</dt><dd>41% клиентов заказали ≤1 раза; 1613 спящих; юрлиц 6% при норме рынка 80%. Рост — сателлиты в 100–150 км, водоматы, СТМ; франшизу доставки не делать.</dd>
+              <dt>Отчёт</dt><dd><code>~/Добро-стратегия/анализ-рынка-воды-2026.md</code></dd>
+            </dl>
+            <dl>
+              <dt>Ждёт</dt><dd>Вашего выбора первого действия: обзвон спящих или предложение для организаций.</dd>
+            </dl>
+          </div>
+        </details>
+
+        <details class="proj" data-s="warn">
+          <summary><span class="pname">Новый завод в Курске</span><span class="pshort">60–80 млн ₽, земля куплена, кредит траншами</span><span class="ptag">В работе</span></summary>
+          <div class="pbody">
+            <dl>
+              <dt>Решение (15.08)</dt><dd>Строить в Курске, другой регион отложить на 2–3 года; запуск этапами.</dd>
+              <dt>Финансирование</dt><dd>Здание — инвесткредит МСП 10,5% (подать до 11.09!); линия — ФРП КО 5% или лизинг 6%; СЭЗ на всю область (порог — вопрос в АИР). Шаг №0 — основной ОКВЭД 11.07 в ЕГРЮЛ.</dd>
+            </dl>
+            <dl>
+              <dt>Материалы</dt><dd><code>~/Добро-стратегия/финансирование-завода-2026.md</code> + артефакт-калькулятор. Контент: серия «от поля до первой бутыли» как долгий магнит.</dd>
+            </dl>
+          </div>
+        </details>
+
+      </div>
+    </div>
+
+    <div class="pgroup">
+      <h3>Бутылочки AQVIOL — маркетплейсы</h3>
+      <div class="plist">
+
+        <details class="proj" data-s="bad">
+          <summary><span class="pname">Сайт-магазин AQVIOL</span><span class="pshort">21 товар из Ozon, корзина → WhatsApp</span><span class="ptag">Блокер</span></summary>
+          <div class="pbody">
+            <dl>
+              <dt>Что сделано</dt><dd>Магазин на шаблоне Ogani, русифицирован, корзина работает, товары загружены из Ozon API (спортивные, детские бутылки, помпа; 589–1690 ₽).</dd>
+              <dt>Роль сайта</dt><dd>Не реклама «на всю РФ» (убыточно), а точка повторных покупок: вкладыш-гарантия в каждую посылку с QR и промокодом SPASIBO −15%. План роста 300→500 шт/мес: <code>~/сайт-бутылочки/план-роста-ozon-wb.md</code>.</dd>
+            </dl>
+            <dl>
+              <dt>Где</dt><dd>Папка <code>~/сайт-бутылочки/магазин/</code>; ключ Ozon — на сервере бота и в <code>.ozon.env</code>.</dd>
+              <dt>Блокер</dt><dd>В WhatsApp стоит номер-заглушка — нужен настоящий; хостинг и домен aqviol.ru не подтверждены; макет вкладыша A6 ждёт одобрения.</dd>
+            </dl>
+          </div>
+        </details>
+
+        <details class="proj" data-s="bad">
+          <summary><span class="pname">Стратегия Ozon и WB 2026</span><span class="pshort">39 приёмов, дедлайны 20.08 и 27.08</span><span class="ptag">Срочно</span></summary>
+          <div class="pbody">
+            <dl>
+              <dt>Что готово</dt><dd>Исследование 39 приёмов: <code>~/сайт-бутылочки/стратегии-2026-wb-ozon.md</code>. Риск — лицензия на героев (Эльза, Микки).</dd>
+              <dt>Ждёт</dt><dd>Ваших решений: поставки WB до 20.08, фиксация тарифов Ozon до 27.08.</dd>
+            </dl>
+          </div>
+        </details>
+
+      </div>
+    </div>
+
+    <div class="pgroup">
+      <h3>Контент и продвижение</h3>
+      <div class="plist">
+
+        <details class="proj" data-s="ok">
+          <summary><span class="pname">Контент-завод (n8n)</span><span class="pshort">3 статьи в неделю с фото и одобрением в Telegram</span><span class="ptag">Работает</span></summary>
+          <div class="pbody">
+            <dl>
+              <dt>Схема</dt><dd>Пн/ср/пт в 10:07 → берёт тему из копилки → Клод пишет статью 220–320 слов (познавательно, без продаж, вовлекающий призыв, подпись DOBRO PRODUCTION) → 3 фото (макро / общий план / композиция) → альбом + текст в Telegram с кнопками «Публикуем / Пропустить» → тема помечается.</dd>
+              <dt>Юридический запрет</dt><dd>Вшит в схему: никакой критики водопроводной воды и водоканалов, никаких сравнений «лучше, чем из-под крана».</dd>
+            </dl>
+            <dl>
+              <dt>Где</dt><dd><a href="https://165-245-252-163.sslip.io">165-245-252-163.sslip.io</a> (вход в файле «Вход в контент-завод» на рабочем столе). Docker на сервере бота; схема «Посты: 3 раза в неделю с одобрением».</dd>
+              <dt>Копилка тем</dt><dd><code>topics.json</code> в хранилище штаба (8 тем, хватит до конца августа). Команда: «пополни копилку тем».</dd>
+              <dt>Дальше</dt><dd>SmmBox (~300 ₽/мес) — чтобы после «Публикуем» посты сами уходили в соцсети.</dd>
+            </dl>
+          </div>
+        </details>
+
+        <details class="proj" data-s="ok">
+          <summary><span class="pname">Дзен-канал «Добро»</span><span class="pshort">12 статей готовы, облачный автор пишет черновики</span><span class="ptag">Работает</span></summary>
+          <div class="pbody">
+            <dl>
+              <dt>Что есть</dt><dd>Канал создан 10.08; 12 школьных статей в <code>~/сайт-бутылочки/дзен-статьи/</code>; статьи от бренда AQVIOL, без связи с доставкой.</dd>
+              <dt>Автор</dt><dd>Облачный агент (вт и пт 9:00) пишет черновики; правила берёт из хранилища <code>vineli46/claude-cloud-skills</code> (130 навыков + свод правил, включая юридический запрет).</dd>
+            </dl>
+            <dl>
+              <dt>Правило</dt><dd>Публиковать вручную — редактор Дзена ломается от автовставки.</dd>
+            </dl>
+          </div>
+        </details>
+
+        <details class="proj" data-s="bad">
+          <summary><span class="pname">Ролик «Глубина»</span><span class="pshort">текст утверждён, 38 карточек раскадровки</span><span class="ptag">Блокер</span></summary>
+          <div class="pbody">
+            <dl>
+              <dt>Готово</dt><dd>Текст (11.08), раскадровка v2.1 из 38 карточек, карточка персонажа (Глубина-рефы-v3/00-КАРТОЧКА-ПЕРСОНАЖА.png).</dd>
+              <dt>Конвейер</dt><dd>Фото → Soul ID → кейфреймы → Seedance image-to-video → линде-монтаж (FFmpeg + HyperFrames + CapCut). Памятки: seedance-официальный-гайд.md, линде-визуал-анализ.md.</dd>
+            </dl>
+            <dl>
+              <dt>Блокер</dt><dd>Вход на syntx.ai (профиль agent-browser <code>~/.syntx-profile</code>; VIP-аккаунт входит только через Telegram).</dd>
+              <dt>Правило</dt><dd>Никаких видео-генераций без показа сценария и вашего «да».</dd>
+            </dl>
+          </div>
+        </details>
+
+        <details class="proj" data-s="warn">
+          <summary><span class="pname">Инструменты для соцсетей</span><span class="pshort">аналитика и сбор трендов</span><span class="ptag">В работе</span></summary>
+          <div class="pbody">
+            <dl>
+              <dt>Подключено</dt><dd>metricool (ждёт входа), Google Trends, Reddit, субтитры YouTube. Ждут ключей: VK, Telegram. Тупик: X, LinkedIn.</dd>
+              <dt>Отчёты</dt><dd><code>~/Instagram-анализ/mcp-серверы-для-соцсетей.md</code>, <code>mcp-зарубежные-соцсети.md</code>.</dd>
+            </dl>
+          </div>
+        </details>
+
+      </div>
+    </div>
+
+    <div class="pgroup">
+      <h3>Приложения и обучение</h3>
+      <div class="plist">
+
+        <details class="proj" data-s="ok">
+          <summary><span class="pname">«Помню! 2» — сад памяти</span><span class="pshort">интервальные повторения, как Anki</span><span class="ptag">Работает</span></summary>
+          <div class="pbody">
+            <dl>
+              <dt>Где</dt><dd><a href="https://pomnyu.higgsfield.app/2">pomnyu.higgsfield.app/2</a> — опубликовано в ленте Higgsfield, вход не нужен.</dd>
+            </dl>
+          </div>
+        </details>
+
+        <details class="proj" data-s="bad">
+          <summary><span class="pname">Remembo для App Store</span><span class="pshort">iOS-версия «Помню! 2»</span><span class="ptag">Блокер</span></summary>
+          <div class="pbody">
+            <dl>
+              <dt>Готово</dt><dd>Проект в <code>~/Remembo</code> (Capacitor 8, русский + английский, уведомления, иконка).</dd>
+              <dt>Блокер</dt><dd>Аккаунт Apple Developer ($99/год) — теперь оплатить можно вашей зарубежной картой; после оплаты Фейбл ведёт публикацию.</dd>
+            </dl>
+          </div>
+        </details>
+
+        <details class="proj" data-s="warn">
+          <summary><span class="pname">Облачные навыки Claude</span><span class="pshort">130 навыков и свод правил для облачных агентов</span><span class="ptag">В работе</span></summary>
+          <div class="pbody">
+            <dl>
+              <dt>Где</dt><dd>github.com/vineli46/claude-cloud-skills (локально <code>~/облачный-клод</code>). CLAUDE.md — правила текстов (Хормози, запретные слова, юридический запрет), правила работы (всё на одобрение).</dd>
+              <dt>Осталось</dt><dd>Подключить GitHub к claude.ai/code и указать репозиторий агентам.</dd>
+            </dl>
+          </div>
+        </details>
+
+      </div>
+    </div>
+
+    <div class="pgroup">
+      <h3>Мастерская: инструменты и правила</h3>
+      <div class="plist">
+
+        <details class="proj" data-s="idea">
+          <summary><span class="pname">Инструменты на маке</span><span class="pshort">браузер, монтаж, распознавание, генерация</span><span class="ptag">Справка</span></summary>
+          <div class="pbody">
+            <dl>
+              <dt>Браузер и сбор</dt><dd>agent-browser (сайты с логином, забирает вход из Chrome), firecrawl (массовый сбор), WebFetch/WebSearch, context7 (документация). Отклонены: Playwright, Perplexity.</dd>
+              <dt>Видео и монтаж</dt><dd>FFmpeg + HyperFrames (бит-анализатор) + pyJianYingDraft (черновики в CapCut). Скилл linde-montage. Отклонены: Shotstack, Creatomate, Remotion.</dd>
+            </dl>
+            <dl>
+              <dt>Картинки и люди</dt><dd>Higgsfield (Soul ID, Nano Banana, Seedance), seedream_v5_pro для людей, gpt_image_2 для макро; рецепт против «пластика»: Portra 400 + текстура кожи + запреты ретуши.</dd>
+              <dt>Слух и экран</dt><dd>whisper (transcribe/listen), screen-text; yt-dlp с куками Chrome для Instagram.</dd>
+            </dl>
+          </div>
+        </details>
+
+        <details class="proj" data-s="idea">
+          <summary><span class="pname">Правила и стиль</span><span class="pshort">как Фейбл пишет и работает</span><span class="ptag">Справка</span></summary>
+          <div class="pbody">
+            <dl class="pfull">
+              <dt>Тексты</dt><dd>Каркас Хормози (боль → цифры → деньги → гарантия → один призыв); 3 полезных / 1 продающий; никогда «короче», «прикинь», «отвечаю», «бомбезное»; познавательный контент — без привязки к доставке и без Курска; юридический запрет на критику водопроводной воды.</dd>
+              <dt>Работа</dt><dd>Действовать самостоятельно; к идеям и планам — сначала «прожарка» вопросами; фото, баннеры, видео и всё публичное — сначала на одобрение; большие ответы — в файлы.</dd>
+              <dt>Дизайн Добро</dt><dd>Жёлтый #F1C232 акцент, лайм #D9F103 в разделах, объёмные читаемые шрифты, анимировать детали внутри баннера.</dd>
+            </dl>
+          </div>
+        </details>
+
+      </div>
     </div>
   </section>
 
@@ -668,6 +1000,9 @@
       cards().forEach(function(c){
         lines.push((c.agent?'Агент':'Проект')+' «'+c.name+'» — статус: '+c.status+'. '+c.sub
           +(c.next?' Следующий шаг: '+c.next:'')+(c.stop?' Блокер: '+c.stop:''));
+      });
+      projects().forEach(function(p){
+        lines.push('КАРТОТЕКА «'+p.name+'» ['+p.tag+']: '+p.short+'. '+p.facts.join(' | '));
       });
       var open=tasks.filter(function(x){return !x.d;}).map(function(x){return x.t;});
       var done=tasks.filter(function(x){return x.d;}).map(function(x){return x.t;});
@@ -1019,6 +1354,33 @@
       return 'Без вас работают '+ag.length+' агента. '
         +ag.map(function(x){return x.name+'. '+x.next+'.';}).join(' ');
     }
+    /* ── картотека проектов ── */
+    function projects(){
+      return Array.prototype.map.call(document.querySelectorAll('.proj'),function(p){
+        var dts=Array.prototype.map.call(p.querySelectorAll('.pbody dt'),txt);
+        var dds=Array.prototype.map.call(p.querySelectorAll('.pbody dd'),txt);
+        var facts=dts.map(function(k,i){return k+': '+(dds[i]||'');});
+        return {el:p,name:txt(p.querySelector('.pname')),short:txt(p.querySelector('.pshort')),tag:txt(p.querySelector('.ptag')),facts:facts};
+      });
+    }
+    function findProject(q){
+      var qws=q.split(/[^a-zа-я0-9!]+/).filter(function(w){return w.length>=3;}),best=null;
+      projects().forEach(function(p){
+        var words=norm(p.name+' '+p.short).split(/[^a-zа-я0-9!]+/).filter(function(w){return w.length>=3;});
+        var hits=words.filter(function(w){return qws.some(function(x){return x===w||(x.length>=4&&w.length>=4&&x.slice(0,4)===w.slice(0,4));});}).length;
+        if(hits>0&&(!best||hits>best.hits))best={p:p,hits:hits};
+      });
+      return best&&best.p;
+    }
+    function sayProjectList(){
+      var ps=projects();
+      return 'В картотеке '+ps.length+' проектов. '+ps.map(function(p){return p.name+' — '+p.tag.toLowerCase();}).join('; ')+'. Скажите «расскажи про» и название — раскрою досье.';
+    }
+    function sayProject(p){
+      p.el.open=true;
+      p.el.scrollIntoView({behavior:'smooth',block:'start'});
+      return p.name+'. Статус: '+p.tag+'. '+p.short+'. '+p.facts.slice(0,3).join(' ');
+    }
     function norm(s){return s.toLowerCase().replace(/ё/g,'е');}
     var alias=[[/озон/g,'ozon'],[/ва[йл]+д?бер+[ии]з?с?/g,'wb'],[/валберис/g,'wb'],[/аквиол/g,'aqviol'],
       [/клод/g,'claude'],[/телеграм/g,'telegram'],[/ремембо/g,'remembo'],[/добро/g,'dobro добро']];
@@ -1055,6 +1417,9 @@
           : 'Все задачи закрыты. Отличная работа, Винели.';
       }
       if(/агент/.test(q)) return sayAgents();
+      if(/список проект|все проект|какие проект|картотек/.test(q)) return sayProjectList();
+      var pm=q.match(/(?:расскажи|подробнее|досье|что такое|как устроен[аоы]?|как настроен[аоы]?)\s+(?:про|о|об)?\s*(.+)/);
+      if(pm){var pr=findProject(pm[1]);if(pr)return sayProject(pr);}
       if(/цифр|выручк|заказов|бутыл|доставлено|продаж воды/.test(q)) return sayLive();
       if(/дедлайн|срок|горит|успеть/.test(q)) return sayDeadlines();
       if(/блокер|мешает|застр|стоит|проблем/.test(q)) return sayBlockers();
