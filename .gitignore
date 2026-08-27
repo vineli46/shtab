@@ -3,3 +3,7 @@ dispatcher-err.log
 .fable.lock
 ttsenv/
 voice-server.log
+.waterapp-url
+stats-err.log
+.gigachat-key
+.russian_ca.pem
