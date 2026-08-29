@@ -415,7 +415,7 @@
       <article class="card" data-s="warn">
         <span class="pill">В работе</span>
         <h3>Инструменты для соцсетей</h3>
-        <p class="sub">Подключены: аналитика metricool, Google Trends, Reddit, субтитры YouTube.</p>
+        <p class="sub">Подключены: аналитика metricool (ждёт входа), Reddit. 29.08 Google Trends и субтитры YouTube выключены за ненадобностью (1 и 0 вызовов за месяц) — возвращаются одной командой <code>/mcp enable</code>.</p>
         <p class="next"><b>Следующий шаг</b>Войти в metricool через /mcp и добавить ключи для VK и Telegram.</p>
       </article>
     </div>
@@ -719,7 +719,7 @@
           <summary><span class="pname">Инструменты для соцсетей</span><span class="pshort">аналитика и сбор трендов</span><span class="ptag">В работе</span></summary>
           <div class="pbody">
             <dl>
-              <dt>Подключено</dt><dd>metricool (ждёт входа), Google Trends, Reddit, субтитры YouTube. Ждут ключей: VK, Telegram. Тупик: X, LinkedIn.</dd>
+              <dt>Подключено</dt><dd>metricool (ждёт входа), Reddit. Выключены 29.08 как неиспользуемые: Google Trends, субтитры YouTube (вернуть — <code>/mcp enable google-trends</code>). Ждут ключей: VK, Telegram. Тупик: X, LinkedIn.</dd>
               <dt>Отчёты</dt><dd><code>~/Instagram-анализ/mcp-серверы-для-соцсетей.md</code>, <code>mcp-зарубежные-соцсети.md</code>.</dd>
             </dl>
           </div>
@@ -778,6 +778,7 @@
             <dl>
               <dt>Картинки и люди</dt><dd>Higgsfield (Soul ID, Nano Banana, Seedance), seedream_v5_pro для людей, gpt_image_2 для макро; рецепт против «пластика»: Portra 400 + текстура кожи + запреты ретуши.</dd>
               <dt>Слух и экран</dt><dd>whisper (transcribe/listen), screen-text; yt-dlp с куками Chrome для Instagram.</dd>
+              <dt>Фейбл: память и токены</dt><dd>29.08 окно автосжатия поднято 150K → 300K: при 150K сжатие шло каждые 1–2 запроса, и Claude Code сам его отключал — это и выглядело как «не работает». Постоянная «шапка» ≈ 45–50K на каждый вызов, из них 80–85 % — системная часть Claude Code, её не ужать; наша часть ужата: 2 лишних MCP выключены, память с архивом закрытых тем. Плагины context-mode / token-saver — только по отдельной просьбе.</dd>
             </dl>
           </div>
         </details>
@@ -822,7 +823,7 @@
   </section>
 
   <footer>
-    <div class="upd">Карточки пересобраны: 28.08.2026</div>
+    <div class="upd">Карточки пересобраны: 29.08.2026</div>
     <p>Дата и счётчики дней до дедлайнов пересчитываются сами при каждом открытии страницы. Карточки проектов Claude обновляет автоматически после каждой работы, где что-то изменилось; в любой момент можно сказать «обнови штаб». Задачи можно редактировать прямо на странице; при подключённых «руках Фейбла» список общий на всех устройствах.</p>
   </footer>
 
