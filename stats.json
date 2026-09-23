@@ -1,16 +1,16 @@
 {
- "updated": "23.09 02:52",
+ "updated": "23.09 10:27",
  "today": {
-  "orders": 123,
-  "delivered": 0,
-  "revenue": 117380.0,
-  "bottles": 433
+  "orders": 207,
+  "delivered": 73,
+  "revenue": 179560.0,
+  "bottles": 653
  },
  "yesterday": {
-  "orders": 393,
+  "orders": 392,
   "delivered": 372,
-  "revenue": 331011.0,
-  "bottles": 1302
+  "revenue": 330411.0,
+  "bottles": 1300
  },
- "new_clients_7d": 96
+ "new_clients_7d": 99
 }
