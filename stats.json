@@ -1,10 +1,10 @@
 {
- "updated": "24.11 07:41",
+ "updated": "24.11 08:11",
  "today": {
-  "orders": 260,
+  "orders": 270,
   "delivered": 0,
-  "revenue": 253055.0,
-  "bottles": 1057
+  "revenue": 260685.0,
+  "bottles": 1084
  },
  "yesterday": {
   "orders": 490,
