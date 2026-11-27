@@ -1,10 +1,10 @@
 {
- "updated": "27.11 16:54",
+ "updated": "27.11 17:24",
  "today": {
-  "orders": 414,
-  "delivered": 379,
-  "revenue": 355492.5,
-  "bottles": 1327
+  "orders": 423,
+  "delivered": 389,
+  "revenue": 361432.5,
+  "bottles": 1347
  },
  "yesterday": {
   "orders": 431,
@@ -12,5 +12,5 @@
   "revenue": 382825.0,
   "bottles": 1473
  },
- "new_clients_7d": 208
+ "new_clients_7d": 210
 }
